@@ -116,7 +116,7 @@ public final class Image {
     /**
      * <p>Getter for the field <code>imageBytes</code>.</p>
      *
-     * @return an array of {@link byte} objects
+     * @return an array of byte objects
      *
      * @deprecated use the {@link #newRun(DocxPart, String, String)} method directly to generate a Run with Inline
      * Drawing
