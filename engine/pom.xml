@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>OfficeStamper engine</name>
-    <groupId>pro.verron.office-stamper</groupId>
+    <groupId>de.admi.office-stamper</groupId>
     <artifactId>engine</artifactId>
-    <version>2.7.0</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <description>
         Office-stamper is a Java template engine for DOCX documents, forked from org.wickedsource.docx-stamper
@@ -322,5 +322,9 @@
             <name>GitHub admi-de Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/admi-de/office-stamper</url>
         </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/admi-de/office-stamper</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>
