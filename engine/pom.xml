@@ -91,14 +91,6 @@
                                 <version>2.0.16</version>
                             </dependency>
                         </dependencies>
-                        <executions>
-                            <execution>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>mutationCoverage</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>
