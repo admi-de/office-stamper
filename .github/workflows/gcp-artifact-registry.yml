@@ -1,4 +1,4 @@
-name: Publish to GitHub packages (admi)
+name: Publish to GCP Artifact Registry (admi)
 on:
   release:
     types: [ created ]
@@ -18,6 +18,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
       - uses: actions/setup-java@v4
         with:
           java-version: 21
@@ -25,5 +36,3 @@ jobs:
           server-id: github
 
       - run: mvn -B -ntp deploy -f engine/pom.xml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
