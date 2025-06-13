@@ -115,7 +115,6 @@ public interface Paragraph {
      * The actual paragraph is different if it is wrapped in an SDT (Structured Document Tag)
      *
      * @return The unwrapped paragraph
-     * @see pro.verron.officestamper.core.StandardParagraph::from
      */
     Paragraph unwrapParagraph();
 }
