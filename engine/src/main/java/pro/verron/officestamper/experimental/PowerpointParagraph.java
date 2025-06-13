@@ -341,6 +341,11 @@ public class PowerpointParagraph
         return StandardComment.create(source.document(), parent, placeholder, id);
     }
 
+    @Override
+    public Paragraph unwrapParagraph() {
+        return this;
+    }
+
     /**
      * {@inheritDoc}
      */

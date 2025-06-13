@@ -73,7 +73,8 @@ public class CommentProcessorRegistry {
                   var comments = collectComments();
                   var paragraphComment = p.getComment();
                   paragraphComment.forEach((pc -> {
-                      var optional = runProcessorsOnParagraphComment(comments, expressionContext, p, pc.getId());
+                      var optional = runProcessorsOnParagraphComment(comments, expressionContext,
+                              p.unwrapParagraph(), pc.getId());
                       commentProcessors.commitChanges(source);
                       optional.ifPresent(proceedComments::add);
                   }));

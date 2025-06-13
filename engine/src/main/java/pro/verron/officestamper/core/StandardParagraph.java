@@ -279,6 +279,15 @@ public class StandardParagraph
         return StandardComment.create(source.document(), p, placeholder, id);
     }
 
+    @Override
+    public Paragraph unwrapParagraph() {
+        if (p.getParent() instanceof SdtRun) {
+            return StandardParagraph.from(source, parent(P.class).orElse(this.p));
+        }
+
+        return this;
+    }
+
     /**
      * {@inheritDoc}
      */
