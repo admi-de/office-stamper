@@ -326,11 +326,11 @@
     <distributionManagement>
         <snapshotRepository>
             <id>artifact-registry</id>
-            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/java-packages</url>
+            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/public-java-packages</url>
         </snapshotRepository>
         <repository>
             <id>artifact-registry</id>
-            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/java-packages</url>
+            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/public-java-packages</url>
         </repository>
     </distributionManagement>
 </project>

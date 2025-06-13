@@ -33,6 +33,6 @@ jobs:
         with:
           java-version: 21
           distribution: 'temurin'
-          server-id: github
+          server-id: artifact-registry
 
       - run: mvn -B -ntp deploy -f engine/pom.xml
