@@ -109,12 +109,4 @@ public interface Paragraph {
     <T> Optional<T> parent(Class<T> aClass);
 
     Collection<Comments.Comment> getComment();
-
-    /**
-     * Retrieves the actual paragraph this paragraph might proxy to.
-     * The actual paragraph is different if it is wrapped in an SDT (Structured Document Tag)
-     *
-     * @return The unwrapped paragraph
-     */
-    Paragraph unwrapParagraph();
 }
