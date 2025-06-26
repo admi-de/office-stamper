@@ -80,9 +80,9 @@ public class StandardParagraph
      * @return a new instance of StandardParagraph based on the provided CTSdtContentRun
      */
     public static StandardParagraph from(DocxPart source, CTSdtContentRun paragraph) {
-        var p = WmlFactory.newParagraph(paragraph.getContent());
-        p.setParent(paragraph.getParent());
-        return new StandardParagraph(source, paragraph.getContent(), p);
+        var parent = (SdtRun) paragraph.getParent();
+        var parentParent = (P) parent.getParent();
+        return new StandardParagraph(source, paragraph.getContent(), parentParent);
     }
 
     @Override public ProcessorContext processorContext(Placeholder placeholder) {
@@ -92,10 +92,11 @@ public class StandardParagraph
     }
 
     @Override public void replace(List<P> toRemove, List<P> toAdd) {
-        int index = siblings().indexOf(p);
+        var siblings = siblings();
+        int index = siblings.indexOf(p);
         if (index < 0) throw new OfficeStamperException("Impossible");
-        siblings().addAll(index, toAdd);
-        siblings().removeAll(toRemove);
+        siblings.addAll(index, toAdd);
+        siblings.removeAll(toRemove);
     }
 
     private List<Object> siblings() {
