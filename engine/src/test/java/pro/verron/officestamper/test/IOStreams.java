@@ -28,7 +28,7 @@ public class IOStreams {
 
     static {
         var env = System.getenv();
-        var keepOutputFile = env.getOrDefault("keepOutputFile", "false");
+        var keepOutputFile = env.getOrDefault("keepOutputFile", "true");
         KEEP_OUTPUT_FILE = Boolean.parseBoolean(keepOutputFile);
     }
 
