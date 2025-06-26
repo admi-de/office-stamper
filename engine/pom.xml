@@ -7,7 +7,7 @@
     <name>OfficeStamper engine</name>
     <groupId>de.admi.office-stamper</groupId>
     <artifactId>engine</artifactId>
-    <version>100.0.1</version>
+    <version>100.1.0</version>
 
     <description>
         Office-stamper is a Java template engine for DOCX documents, forked from org.wickedsource.docx-stamper
