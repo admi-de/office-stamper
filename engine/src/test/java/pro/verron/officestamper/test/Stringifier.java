@@ -175,7 +175,7 @@ public class Stringifier {
      * @since 1.6.6
      */
     public String stringify(Object o) {
-        if (o instanceof JAXBElement<?> jaxb) return stringify(jaxb.getValue());
+        if (o instanceof JAXBElement<?> jaxb) return stringify(jaxb);
         if (o instanceof WordprocessingMLPackage mlPackage) return stringify(mlPackage);
         if (o instanceof Tbl tbl) return stringify(tbl);
         if (o instanceof Tr tr) return stringify(tr);
@@ -262,10 +262,18 @@ public class Stringifier {
         }
     }
 
+    private String stringify(JAXBElement<?> element) {
+        if (element == null) return "";
+        if (element.getName()
+                   .getLocalPart()
+                   .equals("instrText")) return "[instrText=" + stringify(element.getValue()) + "]";
+        return stringify(element.getValue());
+    }
+
     private Optional<String> stringify(FldChar fldChar) {
         var fldData = fldChar.getFldData();
         return ofNullable(fldData).map(Text::getValue)
-                                  .map("[fldchar data=%s]"::formatted);
+                                  .map("[fldchar %s]"::formatted);
     }
 
     private Optional<String> stringify(P.Hyperlink hyperlink) {
