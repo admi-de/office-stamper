@@ -1,0 +1,41 @@
+= Introduction to Office-stamper
+
+Office-stamper (formerly Docx-Stamper) is a Java template engine that allows for dynamic creation of DOCX documents at runtime.
+You design a template using your preferred Word processor; and Office-stamper generate documents based on that template.
+
+== What is Office-stamper?
+
+Office-stamper is a library that enables you to:
+
+* Create dynamic DOCX documents from templates
+* Replace placeholders with actual data
+* Conditionally show or hide content
+* Repeat sections based on collections of data
+* Maintain the original formatting of your templates
+
+== Key Features
+
+* **Expression-based templating**: use Spring Expression Language (SpEL) for powerful template expressions.
+* **Comment-based processing**: add special instructions as comments in your Word documents.
+* **Formatting preservation**: all formatting from the original template remains.
+* **Custom functions**: extend the templating capabilities with your own functions
+* **Type-safe**: strong typing for Java integration
+* **Flexible configuration**: customize the behavior to suit your needs
+
+== Project Status
+
+image:https://github.com/verronpro/docx-stamper/actions/workflows/integrate-os.yml/badge.svg[Build Status,link=https://github.com/verronpro/docx-stamper/actions/workflows/integrate-os.yml]
+image:https://github.com/verronpro/docx-stamper/actions/workflows/integrate-docx4j.yml/badge.svg[Build Status,link=https://github.com/verronpro/docx-stamper/actions/workflows/integrate-docx4j.yml]
+image:https://github.com/verronpro/docx-stamper/actions/workflows/analyze.yml/badge.svg[Build Status,link=https://github.com/verronpro/docx-stamper/actions/workflows/analyze.yml]
+image:https://github.com/verronpro/docx-stamper/actions/workflows/pages.yml/badge.svg[Build Status,link=https://github.com/verronpro/docx-stamper/actions/workflows/pages.yml]
+
+== History
+
+Office-stamper is a fork from the original docx-stamper project and enjoys additional features and improvements.
+This project is active and continues to evolve with new capabilities.
+
+== Next Steps
+
+* Check out the link:getting-started.html[Getting Started] guide to begin using Office-stamper
+* Explore the link:template-expressions.html[Template Expressions] documentation to learn about the expression syntax.
+* See the link:comment-processors.html[Comment Processors] section to understand how to use comments for advanced templating.

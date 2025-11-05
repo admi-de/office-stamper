@@ -2,6 +2,7 @@ package pro.verron.officestamper.utils;
 
 import jakarta.xml.bind.JAXBElement;
 import org.docx4j.TraversalUtil;
+import org.docx4j.XmlUtils;
 import org.docx4j.finders.CommentFinder;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.exceptions.InvalidFormatException;
@@ -11,31 +12,48 @@ import org.docx4j.openpackaging.parts.WordprocessingML.CommentsPart;
 import org.docx4j.wml.*;
 import org.jvnet.jaxb2_commons.ppp.Child;
 import pro.verron.officestamper.api.OfficeStamperException;
-import pro.verron.officestamper.core.TableCellUtil;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+/// Utility class with methods to help in the interaction with WordprocessingMLPackage documents
+/// and their elements, such as comments, parents, and child elements.
 public final class WmlUtils {
     private WmlUtils() {
         throw new OfficeStamperException("Utility class shouldn't be instantiated");
     }
 
-    public static <T> Optional<T> getFirstParentWithClass(Child child, Class<T> aClass, int depth) {
+    /// Attempts to find the first parent of a given child element that is an instance of the specified class within
+    /// the defined search depth.
+    ///
+    /// @param child the child element from which the search for a parent begins.
+    /// @param clazz the class type to match for the parent
+    /// @param depth the maximum amount levels to traverse up the parent hierarchy
+    /// @param <T>   the type of the parent class to search for
+    ///
+    /// @return an Optional containing the first parent matching the specified class, or an empty Optional if no match
+    /// found.
+    public static <T> Optional<T> getFirstParentWithClass(Child child, Class<T> clazz, int depth) {
         var parent = child.getParent();
         var currentDepth = 0;
         while (currentDepth <= depth) {
             currentDepth++;
             if (parent == null) return Optional.empty();
-            if (aClass.isInstance(parent)) return Optional.of(aClass.cast(parent));
+            if (clazz.isInstance(parent)) return Optional.of(clazz.cast(parent));
             if (parent instanceof Child next) parent = next.getParent();
         }
         return Optional.empty();
     }
 
+    /// Extracts a list of comment elements from the specified WordprocessingMLPackage document.
+    ///
+    /// @param document the WordprocessingMLPackage document from which to extract comment elements
+    ///
+    /// @return a list of Child objects representing the extracted comment elements
     public static List<Child> extractCommentElements(WordprocessingMLPackage document) {
         var commentFinder = new CommentFinder();
         TraversalUtil.visit(document, true, commentFinder);
@@ -82,6 +100,16 @@ public final class WmlUtils {
         };
     }
 
+
+    /// Removes the specified child element from its parent container.
+    /// Depending on the type of the parent element, the removal process
+    /// is delegated to the appropriate helper method. If the child is
+    /// contained within a table cell and the cell is empty after removal,
+    /// an empty paragraph is added to the cell.
+    ///
+    /// @param child the child element to be removed
+    ///
+    /// @throws OfficeStamperException if the parent of the child element is of an unexpected type
     public static void remove(Child child) {
         switch (child.getParent()) {
             case ContentAccessor parent -> remove(parent, child);
@@ -90,15 +118,19 @@ public final class WmlUtils {
             case SdtRun parent -> remove(parent, child);
             default -> throw new OfficeStamperException("Unexpected value: " + child.getParent());
         }
-        if (child.getParent() instanceof Tc cell && TableCellUtil.hasNoParagraphOrTable(cell)) {
-            TableCellUtil.addEmptyParagraph(cell);
-        }
+        if (child.getParent() instanceof Tc cell)
+            ensureValidity(cell);
     }
 
-    private static void remove(SdtRun parent, Child child) {
-        parent.getSdtContent()
-              .getContent()
-              .remove(child);
+    private static void remove(ContentAccessor parent, Child child) {
+        var siblings = parent.getContent();
+        var iterator = siblings.listIterator();
+        while (iterator.hasNext()) {
+            if (equals(iterator.next(), child)) {
+                iterator.remove();
+                break;
+            }
+        }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
@@ -113,14 +145,18 @@ public final class WmlUtils {
               .remove(child);
     }
 
-    private static void remove(ContentAccessor parent, Child child) {
-        var siblings = parent.getContent();
-        var iterator = siblings.listIterator();
-        while (iterator.hasNext()) {
-            if (equals(iterator.next(), child)) {
-                iterator.remove();
-                break;
-            }
+    private static void remove(SdtRun parent, Child child) {
+        parent.getSdtContent()
+              .getContent()
+              .remove(child);
+    }
+
+    /// Utility method to ensure the validity of a table cell by adding an empty paragraph if necessary.
+    ///
+    /// @param cell the table cell to be checked and updated.
+    public static void ensureValidity(Tc cell) {
+        if (!containsAnElementOfAnyClasses(cell.getContent(), P.class, Tbl.class)) {
+            addEmptyParagraph(cell);
         }
     }
 
@@ -128,5 +164,45 @@ public final class WmlUtils {
         if (o1 instanceof JAXBElement<?> e1) o1 = e1.getValue();
         if (o2 instanceof JAXBElement<?> e2) o2 = e2.getValue();
         return Objects.equals(o1, o2);
+    }
+
+    private static boolean containsAnElementOfAnyClasses(Collection<Object> collection, Class<?>... classes) {
+        for (Object element : collection) {
+            if (isAnElementOfAnyClasses(element, classes)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void addEmptyParagraph(Tc cell) {
+        var emptyParagraph = WmlFactory.newParagraph();
+        var cellContent = cell.getContent();
+        cellContent.add(emptyParagraph);
+    }
+
+    private static boolean isAnElementOfAnyClasses(Object element, Class<?>... classes) {
+        for (var clazz : classes) {
+            if (clazz.isInstance(unwrapJAXBElement(element))) return true;
+        }
+        return false;
+    }
+
+    private static Object unwrapJAXBElement(Object element) {
+        return element instanceof JAXBElement<?> jaxbElement ? jaxbElement.getValue() : element;
+    }
+
+    /// Checks if the given object is serializable to XML.
+    ///
+    /// @param object the object to be checked for XML serialization
+    ///
+    /// @return true if the object can be serialized to XML, false otherwise
+    public static boolean serializable(Object object) {
+        try {
+            XmlUtils.marshaltoString(object);
+            return true;
+        } catch (Exception _) {
+            return false;
+        }
     }
 }

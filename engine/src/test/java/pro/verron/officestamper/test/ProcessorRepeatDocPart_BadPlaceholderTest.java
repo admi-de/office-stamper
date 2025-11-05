@@ -21,16 +21,16 @@ import static pro.verron.officestamper.test.TestUtils.getResource;
 /// @author Joseph Verrron
 /// @version ${version}
 /// @since 1.6.6
-class RepeatDocPartBadPlaceholderTest {
+class ProcessorRepeatDocPart_BadPlaceholderTest {
     static Stream<Arguments> factories() {
         return Stream.of(argumentSet("obj", objectContextFactory()), argumentSet("map", mapContextFactory()));
     }
 
     @MethodSource("factories")
     @ParameterizedTest
-    @Timeout(10) /* in the case of pipe lock because of unknown exceptions */
+    @Timeout(10) // in the case of pipe lock because of unknown exceptions
     void testBadExpressionShouldNotBlockCallerThread(ContextFactory factory) {
-        var template = getResource("RepeatDocPartBadExpressionTest.docx");
+        var template = getResource("ProcessorRepeatDocPart_BadPlaceholder.docx");
         var context = factory.roles("Homer Simpson",
                 "Dan Castellaneta",
                 "Marge Simpson",

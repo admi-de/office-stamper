@@ -17,14 +17,12 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.joining;
 import static pro.verron.officestamper.utils.WmlFactory.*;
 
-/**
- * <p>CommentWrapper class.</p>
- *
- * @author Joseph Verron
- * @author Tom Hombergs
- * @version ${version}
- * @since 1.0.2
- */
+/// CommentWrapper class.
+///
+/// @author Joseph Verron
+/// @author Tom Hombergs
+/// @version ${version}
+/// @since 1.0.2
 public class StandardComment
         implements Comment {
     private final Set<Comment> children = new HashSet<>();
@@ -34,15 +32,21 @@ public class StandardComment
     private CommentRangeEnd commentRangeEnd;
     private CommentReference commentReference;
 
-    /**
-     * Constructs a new StandardComment object.
-     *
-     * @param document the WordprocessingMLPackage document instance
-     */
+    /// Constructs a new StandardComment object.
+    ///
+    /// @param document the WordprocessingMLPackage document instance
     public StandardComment(WordprocessingMLPackage document) {
         this.document = document;
     }
 
+    /// Creates a new instance of a StandardComment and initializes its properties
+    /// including the comment, comment range start, comment range end, and comment reference.
+    ///
+    /// @param document    the WordprocessingMLPackage document where the comment will be created
+    /// @param parent      the parent element (P) to which the comment belongs
+    /// @param placeholder the placeholder containing the content for the comment
+    /// @param id          the unique identifier for the comment
+    /// @return a fully initialized StandardComment object
     public static StandardComment create(
             WordprocessingMLPackage document,
             P parent,
@@ -57,6 +61,11 @@ public class StandardComment
         return commentWrapper;
     }
 
+    /// Generates a string representation of the StandardComment object, including its ID,
+    /// content, and the number of children comments.
+    ///
+    /// @return a formatted string describing the StandardComment's properties,
+    ///         including its ID, content, and the size of its children.
     @Override public String toString() {
         return "StandardComment{comment={id=%s, content=%s, children=%s}}}".formatted(comment.getId(),
                 comment.getContent()
@@ -66,6 +75,12 @@ public class StandardComment
                 children.size());
     }
 
+    /// Converts the current comment into a Placeholder representation.
+    /// This method processes the content of the associated comment, extracts specific elements
+    /// that are instances of the `P` class, transforms them into strings, and combines them
+    /// to create a raw placeholder using `Placeholders.raw`.
+    ///
+    /// @return a [Placeholder] instance containing the combined string representation of the comment content
     @Override public Placeholder asPlaceholder() {
         String string = this.getComment()
                             .getContent()
@@ -78,18 +93,21 @@ public class StandardComment
         return Placeholders.raw(string);
     }
 
-    /**
-     * <p>getParent.</p>
-     *
-     * @return the comment's author.
-     */
+    /// Returns the smallest common parent of the elements defined by the start
+    /// and end of the comment range.
+    ///
+    /// @return the ContentAccessor representing the smallest common parent of
+    ///         the comment range start and end, or null if no common parent exists
     @Override public ContentAccessor getParent() {
         return DocumentUtil.findSmallestCommonParent(getCommentRangeStart(), getCommentRangeEnd());
     }
 
-    /**
-     * @return the elements in the document that are between the comment range anchors.
-     */
+    /// Retrieves a list of elements that exist within the comment's range,
+    /// bounded by the start and end of the comment range.
+    /// The method iterates through the siblings of the comment's parent content,
+    /// collecting elements starting from the range start to the range end.
+    ///
+    /// @return a list of elements between the comment range start and comment range end
     @Override public List<Object> getElements() {
         List<Object> elements = new ArrayList<>();
         boolean startFound = false;
@@ -103,73 +121,81 @@ public class StandardComment
         return elements;
     }
 
-    /**
-     * <p>Getter for the field <code>commentRangeEnd</code>.</p>
-     *
-     * @return a {@link CommentRangeEnd} object
-     */
+    /// Retrieves the CommentRangeEnd object associated with this comment.
+    ///
+    /// @return the CommentRangeEnd object representing the end of the comment range
     @Override public CommentRangeEnd getCommentRangeEnd() {
         return commentRangeEnd;
     }
 
+    /// Sets the comment range end for the current comment.
+    ///
+    /// @param commentRangeEnd the [CommentRangeEnd] object representing the end of the comment range
     public void setCommentRangeEnd(CommentRangeEnd commentRangeEnd) {
         this.commentRangeEnd = commentRangeEnd;
     }
 
-    /**
-     * <p>Getter for the field <code>commentRangeStart</code>.</p>
-     *
-     * @return a {@link CommentRangeStart} object
-     */
+    /// Getter for the field <code>commentRangeStart</code>.
+    ///
+    /// @return a [CommentRangeStart] object
     @Override public CommentRangeStart getCommentRangeStart() {
         return commentRangeStart;
     }
 
+    /// Sets the starting point of the comment range for the current comment.
+    ///
+    /// @param commentRangeStart the [CommentRangeStart] object representing the beginning of the comment range
     public void setCommentRangeStart(CommentRangeStart commentRangeStart) {
         this.commentRangeStart = commentRangeStart;
     }
 
-    /**
-     * <p>Getter for the field <code>commentReference</code>.</p>
-     *
-     * @return a {@link CommentReference} object
-     */
+    /// Retrieves the comment reference associated with this comment.
+    ///
+    /// @return the CommentReference object linked to this comment
     @Override public CommentReference getCommentReference() {
         return commentReference;
     }
 
+    /// Sets the comment reference for the current comment.
+    ///
+    /// @param commentReference the [CommentReference] object to associate with this comment
     public void setCommentReference(CommentReference commentReference) {
         this.commentReference = commentReference;
     }
 
-    /**
-     * <p>Getter for the field <code>children</code>.</p>
-     *
-     * @return a {@link Set} object
-     */
+    /// Retrieves the set of child comments associated with this comment.
+    ///
+    /// @return a set containing the child comments of the current comment
     @Override public Set<Comment> getChildren() {
         return children;
     }
 
+    /// Sets the children of the comment by adding all elements from the provided set
+    /// to the existing children set.
+    ///
+    /// @param children the set of [Comment] objects to be added as children
     public void setChildren(Set<Comment> children) {
         this.children.addAll(children);
     }
 
-    /**
-     * <p>Getter for the field <code>comment</code>.</p>
-     *
-     * @return a {@link Comments.Comment} object
-     */
+    /// Retrieves the comment associated with this StandardComment.
+    ///
+    /// @return the Comments.Comment object representing the associated comment
     @Override public Comments.Comment getComment() {
         return comment;
     }
 
+    /// Sets the comment for the current StandardComment.
+    ///
+    /// @param comment the [Comments.Comment] object to associate with this StandardComment
     public void setComment(Comments.Comment comment) {
         this.comment = comment;
     }
 
+    /// Retrieves the WordprocessingMLPackage document associated with this StandardComment instance.
+    ///
+    /// @return the WordprocessingMLPackage document associated with this StandardComment instance
     @Override public WordprocessingMLPackage getDocument() {
         return document;
     }
-
 }

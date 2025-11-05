@@ -20,10 +20,8 @@ import static java.time.format.FormatStyle.valueOf;
 import static java.util.Locale.forLanguageTag;
 
 
-/**
- * The OfficeStamperConfigurations class provides static methods
- * to create different configurations for the OfficeStamper.
- */
+/// The OfficeStamperConfigurations class provides static methods
+/// to create different configurations for the OfficeStamper.
 public class OfficeStamperConfigurations {
 
 
@@ -31,13 +29,11 @@ public class OfficeStamperConfigurations {
         throw new OfficeStamperException("OfficeStamperConfigurations cannot be instantiated");
     }
 
-    /**
-     * Creates a new OfficeStamperConfiguration with the standard configuration and additional preprocessors.
-     *
-     * @return the OfficeStamperConfiguration
-     *
-     * @see OfficeStamperConfiguration
-     */
+    /// Creates a new OfficeStamperConfiguration with the standard configuration and additional preprocessors.
+    ///
+    /// @return the OfficeStamperConfiguration
+    ///
+    /// @see OfficeStamperConfiguration
     public static OfficeStamperConfiguration standardWithPreprocessing() {
         var configuration = standard();
         configuration.addPreprocessor(Preprocessors.removeLanguageProof());
@@ -48,11 +44,9 @@ public class OfficeStamperConfigurations {
         return configuration;
     }
 
-    /**
-     * Creates a new standard OfficeStamperConfiguration.
-     *
-     * @return the standard OfficeStamperConfiguration
-     */
+    /// Creates a new standard OfficeStamperConfiguration.
+    ///
+    /// @return the standard OfficeStamperConfiguration
     public static OfficeStamperConfiguration standard() {
         var configuration = new DocxStamperConfiguration();
 
@@ -94,11 +88,12 @@ public class OfficeStamperConfigurations {
                      .withImplementation(BASIC_ISO_DATE::format);
         configuration.addCustomFunction("fweekdate", TemporalAccessor.class)
                      .withImplementation(ISO_WEEK_DATE::format);
-        configuration.addCustomFunction("flocaldatetime", TemporalAccessor.class)
+        var fLocalDateTime = "flocaldatetime";
+        configuration.addCustomFunction(fLocalDateTime, TemporalAccessor.class)
                      .withImplementation(ISO_LOCAL_DATE_TIME::format);
-        configuration.addCustomFunction("flocaldatetime", TemporalAccessor.class, String.class)
+        configuration.addCustomFunction(fLocalDateTime, TemporalAccessor.class, String.class)
                      .withImplementation((date, style) -> ofLocalizedDateTime(valueOf(style)).format(date));
-        configuration.addCustomFunction("flocaldatetime", TemporalAccessor.class, String.class, String.class)
+        configuration.addCustomFunction(fLocalDateTime, TemporalAccessor.class, String.class, String.class)
                      .withImplementation((date, dateStyle, timeStyle) -> ofLocalizedDateTime(valueOf(dateStyle),
                              valueOf(timeStyle)).format(date));
         configuration.addCustomFunction("foffsetdatetime", TemporalAccessor.class)
@@ -123,11 +118,9 @@ public class OfficeStamperConfigurations {
         return configuration;
     }
 
-    /**
-     * Creates a new standard OfficeStamperConfiguration.
-     *
-     * @return the standard OfficeStamperConfiguration
-     */
+    /// Creates a new standard OfficeStamperConfiguration.
+    ///
+    /// @return the standard OfficeStamperConfiguration
     public static OfficeStamperConfiguration raw() {
         var configuration = new DocxStamperConfiguration();
         configuration.resetResolvers();

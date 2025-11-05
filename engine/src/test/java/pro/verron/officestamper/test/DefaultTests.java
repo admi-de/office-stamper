@@ -80,7 +80,7 @@ import static pro.verron.officestamper.test.TestUtils.*;
         return of("Replace Word With integration test",
                 OfficeStamperConfigurations.standardWithPreprocessing(),
                 factory.name("Simpsons"),
-                getResource(Path.of("ReplaceWordWithIntegrationTest.docx")),
+                getResource(Path.of("ProcessorReplaceWith.docx")),
                 """
                         == ReplaceWordWith Integration
                         
@@ -91,6 +91,16 @@ import static pro.verron.officestamper.test.TestUtils.*;
                         
                         |===
                         
+                        == ReplaceWith Integration
+                        
+                        This variable name should be resolved to the value Simpsons.
+                        |===
+                        |This variable name should be resolved to the value Simpsons.
+                        
+                        
+                        |===
+                        
+                        
                         """);
     }
 
@@ -99,9 +109,7 @@ import static pro.verron.officestamper.test.TestUtils.*;
                 standard().addResolver(Resolvers.nullToPlaceholder()),
                 factory.name(null),
                 getResource(Path.of("ReplaceNullExpressionTest.docx")),
-                """
-                        I am ${name}.
-                        """);
+                "I am ${name}.\n");
     }
 
 
@@ -110,9 +118,7 @@ import static pro.verron.officestamper.test.TestUtils.*;
                 standard().addResolver(Resolvers.nullToEmpty()),
                 factory.name(null),
                 getResource(Path.of("ReplaceNullExpressionTest.docx")),
-                """
-                        I am .
-                        """);
+                "I am .\n");
     }
 
 
@@ -258,9 +264,7 @@ import static pro.verron.officestamper.test.TestUtils.*;
         return arguments("Replace Word With Integration test", config, context, template, expected);
     }
 
-    /**
-     * <p>testDateInstantiationAndResolution.</p>
-     */
+    /// testDateInstantiationAndResolution.
     private static Arguments imageReplacementInGlobalParagraphsTest(ContextFactory factory) {
         var context = factory.image(getImage(Path.of("monalisa.jpg")));
         var template = getResource(Path.of("ImageReplacementInGlobalParagraphsTest.docx"));
@@ -383,7 +387,7 @@ import static pro.verron.officestamper.test.TestUtils.*;
 
     private static Arguments customCommentProcessor(ContextFactory factory) {
         return arguments("Custom processor Integration test",
-                standard().addCommentProcessor(ICustomCommentProcessor.class, CustomCommentProcessor::new),
+                standard().addCommentProcessor(ICustomCommentProcessor.class, ProcessorCustomTest::new),
                 factory.empty(),
                 getResource(Path.of("CustomCommentProcessorTest.docx")),
                 """     

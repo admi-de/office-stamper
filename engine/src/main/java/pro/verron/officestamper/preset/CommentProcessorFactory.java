@@ -1,6 +1,7 @@
 package pro.verron.officestamper.preset;
 
 import org.springframework.lang.Nullable;
+import pro.verron.officestamper.api.OfficeStamperException;
 
 /// Factory class to create the correct comment processor for a given comment.
 ///
@@ -8,6 +9,11 @@ import org.springframework.lang.Nullable;
 /// @version ${version}
 /// @since 1.6.4
 public class CommentProcessorFactory {
+
+    private CommentProcessorFactory() {
+        throw new OfficeStamperException("CommentProcessorFactory cannot be instantiated");
+    }
+
     /// Used to resolve a table in the template document.
     /// Take the table passed-in to fill an existing Tbl object in the document.
     ///
@@ -29,12 +35,19 @@ public class CommentProcessorFactory {
     /// @version ${version}
     /// @since 1.0.8
     public interface IReplaceWithProcessor {
-
         /// Replace a single word inside a paragraph with an expression defined in the comment.
         /// The comment should apply to a single word for the replacement to take effect.
         ///
         /// @param expression the expression to replace the text with
+        /// @deprecated since change in behaviour, it is replace by replaceWith, that does not li;it itself to only
+        /// one run in the Paragraph
+        @Deprecated(since = "2.9", forRemoval = true)
         void replaceWordWith(@Nullable String expression);
+
+        /// Replaces content with the specified expression.Works only in a single paragraph.
+        ///
+        /// @param expression the expression to replace the content with; it may be null.
+        void replaceWith(@Nullable String expression);
     }
 
     /// An interface that defines a processor for repeating a paragraph
@@ -46,7 +59,7 @@ public class CommentProcessorFactory {
     /// @since 1.0.0
     public interface IParagraphRepeatProcessor {
         /// Mark a paragraph to be copied once for each element in the passed-in iterable.
-        /// Within each copy, placeholder evaluation context is the next object in the iterable.
+        /// Within each copy, the placeholder evaluation context is the next object in the iterable.
         ///
         /// @param objects objects serving as evaluation context seeding a new copy.
         void repeatParagraph(@Nullable Iterable<Object> objects);
@@ -61,7 +74,7 @@ public class CommentProcessorFactory {
     /// @since 1.0.0
     public interface IRepeatDocPartProcessor {
         /// Mark a document part to be copied once for each element in the passed-in iterable.
-        /// Within each copy, placeholder evaluation context is the next object in the iterable.
+        /// Within each copy, the placeholder evaluation context is the next object in the iterable.
         ///
         /// @param objects objects serving as evaluation context seeding a new copy.
         void repeatDocPart(@Nullable Iterable<Object> objects);
@@ -76,7 +89,7 @@ public class CommentProcessorFactory {
     /// @since 1.0.0
     public interface IRepeatProcessor {
         /// Mark a table row to be copied once for each element in the passed-in iterable.
-        /// Within each copy, placeholder evaluation context is the next object in the iterable.
+        /// Within each copy, the placeholder evaluation context is the next object in the iterable.
         ///
         /// @param objects objects serving as evaluation context seeding a new copy.
         void repeatTableRow(@Nullable Iterable<Object> objects);
@@ -90,44 +103,85 @@ public class CommentProcessorFactory {
     /// @since 1.0.0
     public interface IDisplayIfProcessor {
 
-        void displayParagraphIfAbsent(@Nullable Object condition);
-
-        /// @param condition if true, keep the paragraph surrounding the comment, else remove.
+        /// Displays or removes the paragraph surrounding a specific comment in a document based on the given condition.
+        ///
+        /// @param condition if non-null, keep the paragraph surrounding the comment, else remove.
         void displayParagraphIf(@Nullable Boolean condition);
 
+        /// Displays or removes the paragraph surrounding a specific comment in a document based on the given condition.
+        ///
         /// @param condition if non-null, keep the paragraph surrounding the comment, else remove.
         void displayParagraphIfPresent(@Nullable Object condition);
 
+        /// Displays or removes the paragraph surrounding a specific comment in a document based on the given condition.
+        ///
+        /// @param condition if null, keep the paragraph surrounding the comment, else remove.
+        void displayParagraphIfAbsent(@Nullable Object condition);
+
+        /// Displays or removes the table row surrounding a specific comment in a document based on the given condition.
+        ///
         /// @param condition if true, keep the table row surrounding the comment, else remove.
         void displayTableRowIf(@Nullable Boolean condition);
 
+        /// Displays or removes the table row surrounding a specific comment in a document based on the given condition.
+        ///
         /// @param condition if non-null, keep the table row surrounding the comment, else remove.
         void displayTableRowIfPresent(@Nullable Object condition);
 
+        /// Displays or removes the table row surrounding a specific comment in a document based on the given condition.
+        ///
+        /// @param condition if null, keep the table row surrounding the comment, else remove.
         void displayTableRowIfAbsent(@Nullable Object condition);
 
+        /// Displays or removes the table surrounding a specific comment in a document based on the given condition.
+        ///
         /// @param condition if true, keep the table surrounding the comment, else remove.
         void displayTableIf(@Nullable Boolean condition);
 
+        /// Displays or removes the table surrounding a specific comment in a document based on the given condition.
+        ///
         /// @param condition if non-null, keep the table surrounding the comment, else remove.
         void displayTableIfPresent(@Nullable Object condition);
 
+        /// Displays or removes the table surrounding a specific comment in a document based on the given condition.
+        ///
+        /// @param condition if null, keep the table surrounding the comment, else remove.
         void displayTableIfAbsent(@Nullable Object condition);
 
+        /// Displays or removes the selected words surrounding a specific comment in a document based on the given
+        /// condition.
+        ///
         /// @param condition if true, keep the selected words surrounding the comment, else remove.
         void displayWordsIf(@Nullable Boolean condition);
 
+        /// Displays or removes the selected words surrounding a specific comment in a document based on the given
+        /// condition.
+        ///
         /// @param condition if non-null, keep the selected words surrounding the comment, else remove.
         void displayWordsIfPresent(@Nullable Object condition);
 
+        /// Displays or removes the selected words surrounding a specific comment in a document based on the given
+        /// condition.
+        ///
+        /// @param condition if null, keep the selected words surrounding the comment, else remove.
         void displayWordsIfAbsent(@Nullable Object condition);
 
+        /// Displays or removes the selected elements surrounding a specific comment in a document based on the given
+        /// condition.
+        ///
         /// @param condition if true, keep the selected elements surrounding the comment, else remove.
         void displayDocPartIf(@Nullable Boolean condition);
 
+        /// Displays or removes the selected elements surrounding a specific comment in a document based on the given
+        /// condition.
+        ///
         /// @param condition if non-null, keep the selected elements surrounding the comment, else remove.
         void displayDocPartIfPresent(@Nullable Object condition);
 
+        /// Displays or removes the selected elements surrounding a specific comment in a document based on the given
+        /// condition.
+        ///
+        /// @param condition if null, keep the selected elements surrounding the comment, else remove.
         void displayDocPartIfAbsent(@Nullable Object condition);
     }
 }

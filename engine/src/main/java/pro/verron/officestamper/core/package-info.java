@@ -1,8 +1,6 @@
-/**
- * This package provides the core functionality for docxstamper.
- * <p>
- * It should not be depended on by third-party.
- */
+/// This package provides the core functionality for docxstamper.
+///
+/// Third-party should not depend on it.
 @NonNullApi
 package pro.verron.officestamper.core;
 

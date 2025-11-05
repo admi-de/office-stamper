@@ -15,20 +15,9 @@ import static java.util.stream.Collectors.joining;
 import static pro.verron.officestamper.api.OfficeStamperException.throwing;
 import static pro.verron.officestamper.utils.WmlUtils.getFirstParentWithClass;
 
-/**
- * <p>A "Run" defines a region of text within a docx document with a common set of properties. Word processors are
- * relatively free in splitting a paragraph of text into multiple runs, so there is no strict rule to say over how many
- * runs a word or a string of words is spread.</p>
- * <p>This class aggregates multiple runs so they can be treated as a single text, no matter how many runs the text
- * spans.
- * Create a {@link StandardParagraph} then, call methods to modify the aggregated text.
- * Finally, call {@link #asString()} to get the modified text.
- *
- * @author Joseph Verron
- * @author Tom Hombergs
- * @version ${version}
- * @since 1.0.8
- */
+/// Represents a wrapper for managing and manipulating DOCX paragraph elements.
+/// This class provides methods to manipulate the underlying paragraph content,
+/// process placeholders, and interact with runs within the paragraph.
 public class StandardParagraph
         implements Paragraph {
 
@@ -36,8 +25,13 @@ public class StandardParagraph
     private final DocxPart source;
     private final List<Object> contents;
     private final P p;
-    private List<IndexedRun> runs;
+    private List<StandardRun> runs;
 
+    /// Constructs a new instance of the StandardParagraph class.
+    ///
+    /// @param source           the source DocxPart that contains the paragraph content.
+    /// @param paragraphContent the list of objects representing the paragraph content.
+    /// @param p                the P object representing the paragraph's structure.
     private StandardParagraph(DocxPart source, List<Object> paragraphContent, P p) {
         this.source = source;
         this.contents = paragraphContent;
@@ -45,53 +39,72 @@ public class StandardParagraph
         this.runs = initializeRunList(contents);
     }
 
-
-    /**
-     * Calculates the runs of the paragraph.
-     * This method is called automatically by the constructor, but can also be
-     * called manually to recalculate the runs after a modification to the paragraph was done.
-     */
-    private static List<IndexedRun> initializeRunList(List<Object> objects) {
-        int currentLength = 0;
-        var runList = new ArrayList<IndexedRun>(objects.size());
+    /// Initializes a list of StandardRun objects based on the given list of objects.
+    /// Iterates over the provided list of objects, identifies instances of type R,
+    /// and constructs StandardRun objects while keeping track of their lengths.
+    ///
+    /// @param objects the list of objects to be iterated over and processed into StandardRun instances
+    ///
+    /// @return a list of StandardRun objects created from the given input list
+    private static List<StandardRun> initializeRunList(List<Object> objects) {
+        var currentLength = 0;
+        var runList = new ArrayList<StandardRun>(objects.size());
         for (int i = 0; i < objects.size(); i++) {
-            Object object = objects.get(i);
+            var object = objects.get(i);
             if (object instanceof R run) {
-                int nextLength = currentLength + RunUtil.getLength(run);
-                runList.add(new IndexedRun(currentLength, nextLength, i, run));
-                currentLength = nextLength;
+                var currentRun = new StandardRun(currentLength, i, run);
+                runList.add(currentRun);
+                currentLength += currentRun.length();
             }
         }
         return runList;
     }
 
-    /**
-     * Constructs a new ParagraphWrapper for the given paragraph.
-     */
+    /// Creates a new instance of StandardParagraph using the provided DocxPart and P objects.
+    ///
+    /// @param source    the source DocxPart containing the paragraph.
+    /// @param paragraph the P object representing the structure and content of the paragraph.
+    ///
+    /// @return a new instance of StandardParagraph constructed based on the provided source and paragraph.
     public static StandardParagraph from(DocxPart source, P paragraph) {
         return new StandardParagraph(source, paragraph.getContent(), paragraph);
     }
 
-    /**
-     * Constructs a StandardParagraph from a given CTSdtContentRun paragraph.
-     *
-     * @param paragraph a CTSdtContentRun object representing the content run of the paragraph
-     *
-     * @return a new instance of StandardParagraph based on the provided CTSdtContentRun
-     */
+    /// Creates a new instance of StandardParagraph from the provided DocxPart and CTSdtContentRun objects.
+    ///
+    /// @param source    the source DocxPart containing the paragraph content.
+    /// @param paragraph the CTSdtContentRun object representing the content of the paragraph.
+    ///
+    /// @return a new instance of StandardParagraph constructed based on the provided DocxPart and paragraph.
     public static StandardParagraph from(DocxPart source, CTSdtContentRun paragraph) {
         var parent = (SdtRun) paragraph.getParent();
         var parentParent = (P) parent.getParent();
         return new StandardParagraph(source, paragraph.getContent(), parentParent);
     }
 
-    @Override public ProcessorContext processorContext(Placeholder placeholder) {
+    /// Creates a new instance of ProcessorContext for the current paragraph.
+    /// This method generates a comment for the given placeholder and retrieves the first run from the contents,
+    /// which are then used to construct the ProcessorContext.
+    ///
+    /// @param placeholder the placeholder being processed, used to generate the related comment.
+    ///
+    /// @return a new ProcessorContext instance containing the paragraph, first run, related comment, and placeholder.
+    @Override
+    public ProcessorContext processorContext(Placeholder placeholder) {
         var comment = comment(placeholder);
         var firstRun = (R) contents.getFirst();
         return new ProcessorContext(this, firstRun, comment, placeholder);
     }
 
-    @Override public void replace(List<P> toRemove, List<P> toAdd) {
+    /// Replaces a set of paragraph elements with new ones within the current paragraph's siblings.
+    /// Ensures that the elements to be removed are replaced in the appropriate position.
+    ///
+    /// @param toRemove the list of paragraph elements to be removed.
+    /// @param toAdd    the list of paragraph elements to be added.
+    ///
+    /// @throws OfficeStamperException if the current paragraph object is not found in its siblings.
+    @Override
+    public void replace(List<P> toRemove, List<P> toAdd) {
         var siblings = siblings();
         int index = siblings.indexOf(p);
         if (index < 0) throw new OfficeStamperException("Impossible");
@@ -109,30 +122,33 @@ public class StandardParagraph
         return getFirstParentWithClass(p, aClass, depth);
     }
 
-    @Override public void remove() {
+    /// Removes the paragraph represented by the current instance.
+    /// Delegates the removal process to a utility method that handles the underlying P object.
+    @Override
+    public void remove() {
         WmlUtils.remove(p);
     }
 
-    /**
-     * Retrieves the P object associated with this StandardParagraph.
-     *
-     * @return the P object of this paragraph.
-     *
-     * @deprecated Not recommended, as will be replaced by other API
-     */
-    @Deprecated(since = "2.6", forRemoval = true) @Override public P getP() {
+    /// Retrieves the P object representing the paragraph's structure.
+    ///
+    /// @return the P object associated with the paragraph.
+    ///
+    /// @deprecated use the inplace edition methods instead
+    @Deprecated(since = "2.6", forRemoval = true)
+    @Override
+    public P getP() {
         return p;
     }
 
-    /**
-     * Replaces the given expression with the replacement object within
-     * the paragraph.
-     * The replacement object must be a valid DOCX4J Object.
-     *
-     * @param placeholder the expression to be replaced.
-     * @param replacement the object to replace the expression.
-     */
-    @Override public void replace(Placeholder placeholder, Object replacement) {
+    /// Replaces the given expression with the replacement object within the paragraph.
+    /// The replacement object must be a valid DOCX4J Object.
+    ///
+    /// @param placeholder the expression to be replaced.
+    /// @param replacement the object to replace the expression.
+    @Override
+    public void replace(Placeholder placeholder, Object replacement) {
+        if (!WmlUtils.serializable(replacement))
+            throw new AssertionError("The replacement object must be a valid DOCX4J Object");
         switch (replacement) {
             case R run -> replaceWithRun(placeholder, run);
             case Br br -> replaceWithBr(placeholder, br);
@@ -140,34 +156,12 @@ public class StandardParagraph
         }
     }
 
-    /**
-     * Returns the aggregated text over all runs.
-     *
-     * @return the text of all runs.
-     */
-    @Override public String asString() {
-        return runs.stream()
-                   .map(IndexedRun::run)
-                   .map(RunUtil::getText)
-                   .collect(joining());
-    }
-
-    @Override public void apply(Consumer<P> pConsumer) {
-        pConsumer.accept(p);
-    }
-
-    @Override public <T> Optional<T> parent(Class<T> aClass) {
-        return parent(aClass, Integer.MAX_VALUE);
-    }
-
-    @Override
-    public Collection<Comments.Comment> getComment() {
-        return CommentUtil.getCommentFor(contents, source.document());
-    }
-
     private void replaceWithRun(Placeholder placeholder, R replacement) {
+        replaceExpressionWithRun(placeholder.expression(), replacement);
+    }
+
+    private void replaceExpressionWithRun(String full, R replacement) {
         var text = asString();
-        String full = placeholder.expression();
 
         int matchStartIndex = text.indexOf(full);
         if (matchStartIndex == -1) {
@@ -175,12 +169,22 @@ public class StandardParagraph
             return;
         }
         int matchEndIndex = matchStartIndex + full.length();
-        List<IndexedRun> affectedRuns = getAffectedRuns(matchStartIndex, matchEndIndex);
+        List<StandardRun> affectedRuns = getAffectedRuns(matchStartIndex, matchEndIndex);
 
+        replace(replacement, affectedRuns, full, matchStartIndex, matchEndIndex);
+    }
+
+    private void replace(
+            R replacement,
+            List<StandardRun> affectedRuns,
+            String full,
+            int matchStartIndex,
+            int matchEndIndex
+    ) {
         boolean singleRun = affectedRuns.size() == 1;
 
         if (singleRun) {
-            IndexedRun run = affectedRuns.getFirst();
+            StandardRun run = affectedRuns.getFirst();
 
             boolean expressionSpansCompleteRun = full.length() == run.length();
             boolean expressionAtStartOfRun = matchStartIndex == run.startIndex();
@@ -214,8 +218,8 @@ public class StandardParagraph
             }
         }
         else {
-            IndexedRun firstRun = affectedRuns.getFirst();
-            IndexedRun lastRun = affectedRuns.getLast();
+            StandardRun firstRun = affectedRuns.getFirst();
+            StandardRun lastRun = affectedRuns.getLast();
             replacement.setRPr(firstRun.getPr());
             removeExpression(firstRun, matchStartIndex, matchEndIndex, lastRun, affectedRuns);
             // add replacement run between first and last run
@@ -225,37 +229,38 @@ public class StandardParagraph
     }
 
     private void replaceWithBr(Placeholder placeholder, Br br) {
-        for (IndexedRun indexedRun : runs) {
-            var runContentIterator = indexedRun.run()
-                                               .getContent()
-                                               .listIterator();
+        for (StandardRun standardRun : runs) {
+            var runContentIterator = standardRun.run()
+                                                .getContent()
+                                                .listIterator();
             while (runContentIterator.hasNext()) {
                 Object element = runContentIterator.next();
-                if (element instanceof JAXBElement<?> jaxbElement && !jaxbElement.getName().getLocalPart().equals(
-                        "instrText")) element =
-                        jaxbElement.getValue();
+                if (element instanceof JAXBElement<?> jaxbElement && !jaxbElement.getName()
+                                                                                 .getLocalPart()
+                                                                                 .equals("instrText"))
+                    element = jaxbElement.getValue();
                 if (element instanceof Text text) replaceWithBr(placeholder, br, text, runContentIterator);
             }
         }
     }
 
-    private List<IndexedRun> getAffectedRuns(int startIndex, int endIndex) {
+    private List<StandardRun> getAffectedRuns(int startIndex, int endIndex) {
         return runs.stream()
                    .filter(run -> run.isTouchedByRange(startIndex, endIndex))
                    .toList();
     }
 
     private void removeExpression(
-            IndexedRun firstRun,
+            StandardRun firstRun,
             int matchStartIndex,
             int matchEndIndex,
-            IndexedRun lastRun,
-            List<IndexedRun> affectedRuns
+            StandardRun lastRun,
+            List<StandardRun> affectedRuns
     ) {
         // remove the expression from the first run
         firstRun.replace(matchStartIndex, matchEndIndex, "");
         // remove all runs between first and last
-        for (IndexedRun run : affectedRuns) {
+        for (StandardRun run : affectedRuns) {
             if (!Objects.equals(run, firstRun) && !Objects.equals(run, lastRun)) {
                 contents.remove(run.run());
             }
@@ -264,8 +269,31 @@ public class StandardParagraph
         lastRun.replace(matchStartIndex, matchEndIndex, "");
     }
 
+    @Override
+    public void replace(Object from, Object to, R run) {
+        var fromIndex = contents.indexOf(from);
+        var toIndex = contents.indexOf(to);
+        if (fromIndex < 0) {
+            var msg = "The start element (%s) is not in the paragraph (%s)";
+            throw new OfficeStamperException(msg.formatted(from, this));
+        }
+        if (toIndex < 0) {
+            var msg = "The end element (%s) is not in the paragraph (%s)";
+            throw new OfficeStamperException(msg.formatted(to, this));
+        }
+        if (fromIndex > toIndex) {
+            var msg = "The start element (%s) is after the end element (%s)";
+            throw new OfficeStamperException(msg.formatted(to, this));
+        }
+        var expression = extractExpression(from, to);
+        replaceExpressionWithRun(expression, run);
+    }
+
     private static void replaceWithBr(
-            Placeholder placeholder, Br br, Text text, ListIterator<Object> runContentIterator
+            Placeholder placeholder,
+            Br br,
+            Text text,
+            ListIterator<Object> runContentIterator
     ) {
         var value = text.getValue();
         runContentIterator.remove();
@@ -277,16 +305,196 @@ public class StandardParagraph
         }
     }
 
+    private String extractExpression(Object from, Object to) {
+        var fromIndex = contents.indexOf(from);
+        var toIndex = contents.indexOf(to);
+        var subContent = contents.subList(fromIndex, toIndex + 1);
+
+        var subRuns = new ArrayList<>(runs);
+        subRuns.removeIf(run -> !subContent.contains(run.run()));
+        return subRuns.stream()
+                      .map(StandardRun::getText)
+                      .collect(joining());
+    }
+
+    /// Returns the aggregated text over all runs.
+    ///
+    /// @return the text of all runs.
+    @Override
+    public String asString() {
+        return runs.stream()
+                   .map(StandardRun::getText)
+                   .collect(joining());
+    }
+
+    /// Applies the given consumer to the paragraph represented by the current instance.
+    /// This method facilitates custom processing by allowing the client to define
+    /// specific operations to be performed on the paragraph's internal structure.
+    ///
+    /// @param pConsumer the consumer function to apply to the paragraph's structure.
+    @Override
+    public void apply(Consumer<P> pConsumer) {
+        pConsumer.accept(p);
+    }
+
+    /// Retrieves the nearest parent of the specified type for the current paragraph.
+    /// The search is performed starting from the current paragraph and traversing
+    /// up to the root, with a default maximum depth of Integer.MAX_VALUE.
+    ///
+    /// @param aClass the class type of the parent to search for
+    /// @param <T>    the generic type of the parent
+    ///
+    /// @return an Optional containing the parent of the specified type if found,
+    ///         or an empty Optional if no parent of the given type exists
+    @Override
+    public <T> Optional<T> parent(Class<T> aClass) {
+        return parent(aClass, Integer.MAX_VALUE);
+    }
+
+    /// Retrieves the collection of comments associated with the current paragraph.
+    ///
+    /// @return a collection of [Comments.Comment] objects related to the paragraph.
+    @Override
+    public Collection<Comments.Comment> getComment() {
+        return CommentUtil.getCommentFor(contents, source.document());
+    }
+
     private Comment comment(Placeholder placeholder) {
         var id = new BigInteger(16, RANDOM);
         return StandardComment.create(source.document(), p, placeholder, id);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override public String toString() {
+    /// Returns the string representation of the paragraph.
+    /// This method delegates to the `asString` method to aggregate the text content of all runs.
+    ///
+    /// @return a string containing the combined text content of the paragraph's runs.
+    @Override
+    public String toString() {
         return asString();
     }
 
+    /// Represents a run (i.e., a text fragment) in a paragraph. The run is indexed relative to the containing paragraph
+    /// and also relative to the containing document.
+    ///
+    /// @param startIndex    the start index of the run relative to the containing paragraph.
+    /// @param indexInParent the index of the run relative to the containing document.
+    /// @param run           the run itself.
+    ///
+    /// @author Joseph Verron
+    /// @author Tom Hombergs
+    /// @version ${version}
+    /// @since 1.0.0
+    public record StandardRun(int startIndex, int indexInParent, R run) {
+
+        /// Retrieves a substring from the text content of this run, starting at the specified begin index.
+        ///
+        /// @param beginIndex the beginning index, inclusive, for the substring.
+        ///
+        /// @return the substring of the run's text starting from the specified begin index to the end of the text.
+        public String substring(int beginIndex) {
+            return getText().substring(beginIndex);
+        }
+
+        /// Retrieves a substring from the text content of this run, starting
+        /// at the specified begin index and ending at the specified end index.
+        ///
+        /// @param beginIndex the beginning index, inclusive, for the substring.
+        /// @param endIndex   the ending index, exclusive, for the substring.
+        ///
+        /// @return the substring of the run's text from the specified begin index to the specified end index.
+        public String substring(int beginIndex, int endIndex) {
+            return getText().substring(beginIndex, endIndex);
+        }
+
+        /// Finds the index of the first occurrence of the specified substring in the text of the current run.
+        ///
+        /// @param full the substring to search for within the run's text.
+        ///
+        /// @return the index of the first occurrence of the specified substring,
+        /// or &ndash;1 if the substring is not found.
+        public int indexOf(String full) {
+            return getText().indexOf(full);
+        }
+
+        /// Returns the text string of a run.
+        ///
+        /// @return [String] representation of the run.
+        public String getText() {
+            return RunUtil.getText(run);
+        }
+
+        /// Retrieves the properties associated with this run.
+        ///
+        /// @return the [RPr] object representing the properties of the run.
+        public RPr getPr() {
+            return run.getRPr();
+        }
+
+        /// Determines whether the current run is affected by the specified range of global start and end indices.
+        /// A run is considered "touched" if any part of it overlaps with the given range.
+        ///
+        /// @param globalStartIndex the global start index of the range.
+        /// @param globalEndIndex   the global end index of the range.
+        ///
+        /// @return `true` if the current run is touched by the specified range; `false` otherwise.
+        public boolean isTouchedByRange(int globalStartIndex, int globalEndIndex) {
+            return startsInRange(globalStartIndex, globalEndIndex) || endsInRange(globalStartIndex, globalEndIndex)
+                   || englobesRange(globalStartIndex, globalEndIndex);
+        }
+
+        private boolean startsInRange(int globalStartIndex, int globalEndIndex) {
+            return globalStartIndex < startIndex && startIndex <= globalEndIndex;
+        }
+
+        private boolean endsInRange(int globalStartIndex, int globalEndIndex) {
+            return globalStartIndex < endIndex() && endIndex() <= globalEndIndex;
+        }
+
+        private boolean englobesRange(int globalStartIndex, int globalEndIndex) {
+            return startIndex <= globalStartIndex && globalEndIndex <= endIndex();
+        }
+
+        /// Calculates the end index of the current run based on its start index and length.
+        ///
+        /// @return the end index of the run.
+        public int endIndex() {
+            return startIndex + length();
+        }
+
+        /// Calculates the length of the text content of this run.
+        ///
+        /// @return the length of the text in the current run.
+        public int length() {
+            return getText().length();
+        }
+
+        /// Replaces the substring starting at the given index with the given replacement string.
+        ///
+        /// @param globalStartIndex the global index at which to start the replacement.
+        /// @param globalEndIndex   the global index at which to end the replacement.
+        /// @param replacement      the string to replace the substring at the specified global index.
+        public void replace(int globalStartIndex, int globalEndIndex, String replacement) {
+            int localStartIndex = globalIndexToLocalIndex(globalStartIndex);
+            int localEndIndex = globalIndexToLocalIndex(globalEndIndex);
+            var text = substring(0, localStartIndex);
+            text += replacement;
+            String runText = getText();
+            if (!runText.isEmpty()) {
+                text += substring(localEndIndex);
+            }
+            RunUtil.setText(run, text);
+        }
+
+        /// Converts a global index to a local index within the context of this run.
+        /// (meaning the index relative to multiple aggregated runs)
+        ///
+        /// @param globalIndex the global index to convert.
+        ///
+        /// @return the local index corresponding to the given global index.
+        private int globalIndexToLocalIndex(int globalIndex) {
+            if (globalIndex < startIndex) return 0;
+            else if (globalIndex > endIndex()) return length();
+            else return globalIndex - startIndex;
+        }
+    }
 }

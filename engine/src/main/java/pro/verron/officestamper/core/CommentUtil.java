@@ -19,14 +19,12 @@ import static org.docx4j.XmlUtils.unwrap;
 import static pro.verron.officestamper.utils.WmlFactory.newBody;
 import static pro.verron.officestamper.utils.WmlFactory.newComments;
 
-/**
- * Utility class for working with comments in a DOCX document.
- *
- * @author Joseph Verron
- * @author Tom Hombergs
- * @version ${version}
- * @since 1.0.0
- */
+/// Utility class for working with comments in a DOCX document.
+///
+/// @author Joseph Verron
+/// @author Tom Hombergs
+/// @version ${version}
+/// @since 1.0.0
 public class CommentUtil {
     private static final PartName WORD_COMMENTS_PART_NAME;
 
@@ -42,14 +40,12 @@ public class CommentUtil {
         throw new OfficeStamperException("Utility class shouldn't be instantiated");
     }
 
-    /**
-     * Returns the comment the given DOCX4J object is commented with.
-     *
-     * @param run      the DOCX4J object whose comment to retrieve.
-     * @param document the document that contains the object.
-     *
-     * @return Optional of the comment, if found, Optional.empty() otherwise.
-     */
+    /// Retrieves the comment associated with or around the specified `R` run within a WordprocessingMLPackage document.
+    ///
+    /// @param run      the run to search for an associated comment
+    /// @param document the WordprocessingMLPackage document containing the run and its possible comments
+    ///
+    /// @return an Optional containing the found comment, or Optional.empty() if no comment is associated
     public static Optional<Comments.Comment> getCommentAround(R run, WordprocessingMLPackage document) {
         ContentAccessor parent = (ContentAccessor) run.getParent();
         if (parent == null) return Optional.empty();
@@ -57,7 +53,9 @@ public class CommentUtil {
     }
 
     private static Optional<Comments.Comment> getComment(
-            R run, WordprocessingMLPackage document, ContentAccessor parent
+            R run,
+            WordprocessingMLPackage document,
+            ContentAccessor parent
     ) {
         CommentRangeStart possibleComment = null;
         boolean foundChild = false;
@@ -72,22 +70,13 @@ public class CommentUtil {
             }
             // else restart
             else {
-                possibleComment = null;// TODO There is  bug here when looking for a commented run and the run has
-                // ProofErr issues
+                possibleComment = null;
                 foundChild = false;
             }
         }
         return Optional.empty();
     }
 
-    /**
-     * Finds a comment with the given ID in the specified WordprocessingMLPackage document.
-     *
-     * @param document the WordprocessingMLPackage document to search for the comment
-     * @param id       the ID of the comment to find
-     *
-     * @return an Optional containing the Comment if found, or an empty Optional if not found
-     */
     private static Optional<Comments.Comment> findComment(WordprocessingMLPackage document, BigInteger id) {
         return getCommentsPart(document.getParts()).map(CommentUtil::extractContent)
                                                    .map(Comments::getComment)
@@ -98,17 +87,40 @@ public class CommentUtil {
 
     }
 
-    /**
-     * Retrieves the comment associated with a given paragraph content within a WordprocessingMLPackage document.
-     *
-     * @param paragraphContent the content of the paragraph to search for a comment.
-     * @param document         the WordprocessingMLPackage document containing the paragraph and its comments.
-     *
-     * @return an Optional containing the found comment, or Optional.empty() if no comment is associated with the given
-     * paragraph content.
-     */
+    /// Retrieves the CommentsPart from the given Parts object.
+    ///
+    /// @param parts the Parts object containing the various parts of the document.
+    ///
+    /// @return an Optional containing the CommentsPart if found, or an empty Optional if not found.
+    public static Optional<CommentsPart> getCommentsPart(Parts parts) {
+        return Optional.ofNullable((CommentsPart) parts.get(WORD_COMMENTS_PART_NAME));
+    }
+
+    /// Extracts the contents of a given [CommentsPart].
+    ///
+    /// @param commentsPart the [CommentsPart] from which content will be extracted
+    ///
+    /// @return the [Comments] instance containing the content of the provided comments part
+    ///
+    /// @throws OfficeStamperException if an error occurs while retrieving the content
+    public static Comments extractContent(CommentsPart commentsPart) {
+        try {
+            return commentsPart.getContents();
+        } catch (Docx4JException e) {
+            throw new OfficeStamperException("Error while searching comment.", e);
+        }
+    }
+
+    /// Retrieves the comment associated with a given paragraph content within a WordprocessingMLPackage document.
+    ///
+    /// @param paragraphContent the content of the paragraph to search for a comment.
+    /// @param document         the WordprocessingMLPackage document containing the paragraph and its comments.
+    ///
+    /// @return an Optional containing the found comment, or Optional.empty() if no comment is associated with the given
+    /// paragraph content.
     public static Collection<Comments.Comment> getCommentFor(
-            List<Object> paragraphContent, WordprocessingMLPackage document
+            List<Object> paragraphContent,
+            WordprocessingMLPackage document
     ) {
         var comments = getCommentsPart(document.getParts()).map(CommentUtil::extractContent)
                                                            .map(Comments::getComment)
@@ -124,25 +136,6 @@ public class CommentUtil {
                                .toList();
     }
 
-    /**
-     * Retrieves the CommentsPart from the given Parts object.
-     *
-     * @param parts the Parts object containing the various parts of the document.
-     *
-     * @return an Optional containing the CommentsPart if found, or an empty Optional if not found.
-     */
-    public static Optional<CommentsPart> getCommentsPart(Parts parts) {
-        return Optional.ofNullable((CommentsPart) parts.get(WORD_COMMENTS_PART_NAME));
-    }
-
-    public static Comments extractContent(CommentsPart commentsPart) {
-        try {
-            return commentsPart.getContents();
-        } catch (Docx4JException e) {
-            throw new OfficeStamperException("Error while searching comment.", e);
-        }
-    }
-
     private static Optional<Comments.Comment> findCommentById(List<Comments.Comment> comments, BigInteger id) {
         for (Comments.Comment comment : comments) {
             if (id.equals(comment.getId())) {
@@ -152,11 +145,9 @@ public class CommentUtil {
         return Optional.empty();
     }
 
-    /**
-     * Returns the string value of the specified comment object.
-     *
-     * @param comment a {@link Comment} object
-     */
+    /// Returns the string value of the specified comment object.
+    ///
+    /// @param comment a [Comment] object
     public static void deleteComment(Comment comment) {
         CommentRangeEnd end = comment.getCommentRangeEnd();
         if (end != null) {
@@ -178,61 +169,41 @@ public class CommentUtil {
         }
     }
 
-    /**
-     * Returns the string value of the specified comment object.
-     *
-     * @param items     a {@link List} object
-     * @param commentId a {@link BigInteger} object
-     */
-    public static void deleteCommentFromElements(List<Object> items, BigInteger commentId) {
-        List<Object> elementsToRemove = new ArrayList<>();
+    private static List<DeletableItems> findDeletableItemsForComment(List<Object> items, BigInteger commentId) {
+        List<DeletableItems> elementsToRemove = new ArrayList<>();
         for (Object item : items) {
             Object unwrapped = unwrap(item);
-            if (unwrapped instanceof CommentRangeStart crs) {
-                var id = crs.getId();
-                if (id.equals(commentId)) {
-                    elementsToRemove.add(item);
-                }
-            }
-            else if (unwrapped instanceof CommentRangeEnd cre) {
-                var id = cre.getId();
-                if (id.equals(commentId)) {
-                    elementsToRemove.add(item);
-                }
-            }
-            else if (unwrapped instanceof R.CommentReference rcr) {
-                var id = rcr.getId();
-                if (id.equals(commentId)) {
-                    elementsToRemove.add(item);
-                }
-            }
-            else if (unwrapped instanceof ContentAccessor ca) {
-                deleteCommentFromElements(ca.getContent(), commentId);
-            }
-            else if (unwrapped instanceof SdtRun sdtRun) {
-                deleteCommentFromElements(sdtRun.getSdtContent()
-                                                .getContent(), commentId);
-            }
+            if (unwrapped instanceof CommentRangeStart crs && Objects.equals(commentId, crs.getId()))
+                elementsToRemove.add(new DeletableItems(items, List.of(item)));
+            else if (unwrapped instanceof CommentRangeEnd cre && Objects.equals(commentId, cre.getId()))
+                elementsToRemove.add(new DeletableItems(items, List.of(item)));
+            else if (unwrapped instanceof R.CommentReference rcr && Objects.equals(commentId, rcr.getId()))
+                elementsToRemove.add(new DeletableItems(items, List.of(item)));
+            else if (unwrapped instanceof ContentAccessor ca)
+                elementsToRemove.addAll(findDeletableItemsForComment(ca.getContent(), commentId));
+            else if (unwrapped instanceof SdtRun sdtRun)
+                elementsToRemove.addAll(findDeletableItemsForComment(sdtRun.getSdtContent()
+                                                                           .getContent(), commentId));
         }
-        items.removeAll(elementsToRemove);
+        return elementsToRemove;
     }
 
-    private static void deleteCommentFromElements(
-            Comment comment, List<Object> elements
-    ) {
+    /// Deletes all elements associated with the specified comment from the provided list of items.
+    ///
+    /// @param comment the comment whose associated elements should be removed
+    /// @param items   the list of items from which elements associated with the comment will be deleted
+    public static void deleteCommentFromElements(Comment comment, List<Object> items) {
         var docx4jComment = comment.getComment();
         var commentId = docx4jComment.getId();
-        deleteCommentFromElements(elements, commentId);
+        findDeletableItemsForComment(items, commentId).forEach(p -> p.container.removeAll(p.items));
     }
 
-    /**
-     * Creates a sub Word document
-     * by extracting a specified comment and its associated content from the original document.
-     *
-     * @param comment The comment to be extracted from the original document.
-     *
-     * @return The sub Word document containing the content of the specified comment.
-     */
+    /// Creates a sub Word document
+    /// by extracting a specified comment and its associated content from the original document.
+    ///
+    /// @param comment The comment to be extracted from the original document.
+    ///
+    /// @return The sub Word document containing the content of the specified comment.
     public static WordprocessingMLPackage createSubWordDocument(Comment comment) {
         var elements = comment.getElements();
 
@@ -282,4 +253,6 @@ public class CommentUtil {
         }
         return newComments(list);
     }
+
+    private record DeletableItems(List<Object> container, List<Object> items) {}
 }

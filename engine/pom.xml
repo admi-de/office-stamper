@@ -7,16 +7,21 @@
     <name>OfficeStamper engine</name>
     <groupId>de.admi.office-stamper</groupId>
     <artifactId>engine</artifactId>
-    <version>100.2.0</version>
+    <version>100.3.0</version>
 
     <description>
         Office-stamper is a Java template engine for DOCX documents, forked from org.wickedsource.docx-stamper
     </description>
     <url>https://github.com/verronpro/docx-stamper</url>
+    <organization>
+        <name>Verron.pro</name>
+        <url>https://verron.pro</url>
+    </organization>
     <properties>
-        <docx4j.version>11.5.3</docx4j.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <docx4j.version>11.5.6</docx4j.version>
+        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <scm>
@@ -42,8 +47,8 @@
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>3.2.8</version>
                         <configuration>
-                             <bestPractices>true</bestPractices>
-                         </configuration>
+                            <bestPractices>true</bestPractices>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -68,7 +73,7 @@
                     <plugin>
                         <groupId>org.pitest</groupId>
                         <artifactId>pitest-maven</artifactId>
-                        <version>1.20.0</version>
+                        <version>1.21.0</version>
                         <configuration>
                             <jvmArgs>
                                 <jvmArg>--add-opens</jvmArg>
@@ -99,7 +104,7 @@
                     <plugin>
                         <groupId>org.pitest</groupId>
                         <artifactId>pitest-maven</artifactId>
-                        <version>1.20.0</version>
+                        <version>1.21.0</version>
                     </plugin>
                 </plugins>
             </reporting>
@@ -109,10 +114,28 @@
     <developers>
         <developer>
             <email>joseph@verron.pro</email>
-            <name>Caring Coder</name>
-            <url>https://github.com/caring-coder</url>
+            <name>Joseph Verron</name>
+            <url>https://blog.verron.pro</url>
+            <organization>Verron.pro</organization>
+            <organizationUrl>https://verron.pro</organizationUrl>
+            <roles>
+                <role>Lead Developer</role>
+            </roles>
+            <timezone>Beijing</timezone>
         </developer>
     </developers>
+
+    <contributors>
+        <contributor>
+            <name>Youssouf Naciri</name>
+            <email>y@naciri.fr</email>
+            <url>https://youssouf.naciri.fr</url>
+            <organization>YZ Network</organization>
+            <roles>
+                <role>Lead Developer</role>
+            </roles>
+        </contributor>
+    </contributors>
 
     <build>
         <resources>
@@ -135,16 +158,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version>
+                <version>3.14.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.11.2</version>
+                <version>3.12.0</version>
                 <configuration>
-                    <defaultAuthor>Joseph Verron</defaultAuthor>
-                    <defaultVersion>${project.version}</defaultVersion>
-                    <defaultSince>${project.version}</defaultSince>
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
                 </configuration>
@@ -173,10 +193,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.3</version>
+                <version>3.5.4</version>
                 <configuration>
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>>
                 </configuration>
             </plugin>
             <plugin>
@@ -198,12 +217,17 @@
                         <artifactId>asciidoctor-maven-plugin</artifactId>
                         <version>3.2.0</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-parser-doxia-module</artifactId>
+                        <version>3.2.0</version>
+                    </dependency>
                 </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.13</version>
+                <version>0.8.14</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -225,6 +249,17 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
+                </configuration>
+            </plugin>
         </plugins>
         <extensions>
             <extension>
@@ -240,7 +275,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>3.5.3</version>
+                <version>3.5.4</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -250,7 +285,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.11.2</version>
+                <version>3.12.0</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -263,7 +298,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.13</version>
+                <version>0.8.14</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -295,7 +330,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-expression</artifactId>
-            <version>6.2.8</version>
+            <version>6.2.12</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework</groupId>
@@ -306,13 +341,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.13.2</version>
+            <version>6.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>6.2.8</version>
+            <version>6.2.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -320,6 +355,12 @@
             <artifactId>slf4j-simple</artifactId>
             <version>2.0.17</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>26.0.2-1</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

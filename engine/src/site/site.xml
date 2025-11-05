@@ -1,16 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="DOCX-Stamper"
+<project name="office-stamper"
         xmlns="http://maven.apache.org/DECORATION/1.8.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 https://maven.apache.org/xsd/decoration-1.8.0.xsd">
     <skin>
         <groupId>org.apache.maven.skins</groupId>
         <artifactId>maven-fluido-skin</artifactId>
-        <version>1.11.1</version>
+        <version>2.1.0</version>
     </skin>
     <body>
-        <menu name="DOCX-Stamper">
+        <menu name="Office-stamper">
             <item name="Overview" href="index.html"/>
+            <item name="Introduction" href="introduction.html"/>
+            <item name="Getting Started" href="getting-started.html"/>
+        </menu>
+        <menu name="User Guide">
+            <item name="Template Expressions" href="template-expressions.html"/>
+            <item name="Comment Processors" href="comment-processors.html"/>
+            <item name="SpEL Functions" href="spel-functions.html"/>
+            <item name="Custom Settings" href="custom-settings.html"/>
+            <item name="Advanced Features" href="advanced-features.html"/>
+            <item name="Troubleshooting" href="troubleshooting.html"/>
+        </menu>
+        <menu name="Project Info">
+            <item name="Release Notes" href="release-notes.html"/>
+            <item name="Contributing" href="contributing.html"/>
         </menu>
         <menu name="Reports" ref="reports"/>
     </body>

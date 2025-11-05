@@ -26,17 +26,17 @@ jobs:
         language: [ 'java-kotlin' ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
-          java-version: 21
+          java-version: 25
           distribution: 'temurin'
           cache: 'maven'
 
@@ -48,6 +48,6 @@ jobs:
           args: --baseline,qodana.sarif.json
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{matrix.language}}"
