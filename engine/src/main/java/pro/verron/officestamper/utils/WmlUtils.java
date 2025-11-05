@@ -201,7 +201,7 @@ public final class WmlUtils {
         try {
             XmlUtils.marshaltoString(object);
             return true;
-        } catch (Exception _) {
+        } catch (Exception e) {
             return false;
         }
     }
