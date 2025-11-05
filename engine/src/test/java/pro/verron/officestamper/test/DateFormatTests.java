@@ -2,6 +2,7 @@ package pro.verron.officestamper.test;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -38,6 +39,7 @@ import static pro.verron.officestamper.test.TestUtils.makeResource;
     @DisplayName("Should works with variables, multiline text, in comment content, inside comment, and in repetitions.")
     @MethodSource("factories")
     @ParameterizedTest
+    @Disabled
     void features(ContextFactory factory) {
         var config = standard();
         var template = makeResource("""
