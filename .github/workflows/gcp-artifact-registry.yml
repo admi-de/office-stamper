@@ -32,4 +32,4 @@ jobs:
           distribution: 'temurin'
           server-id: artifact-registry
 
-      - run: mvn -B -ntp deploy -f engine/pom.xml
+      - run: mvn -B -ntp deploy -f pom.xml
