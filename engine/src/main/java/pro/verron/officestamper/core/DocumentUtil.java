@@ -52,8 +52,14 @@ public class DocumentUtil {
             case ContentAccessor accessor -> accessor.getContent();
             case SdtRun sdtRun -> sdtRun.getSdtContent()
                                         .getContent();
-            case ProofErr _, Text _, R.CommentReference _, CommentRangeEnd _, CommentRangeStart _, Br _,
-                 R.LastRenderedPageBreak _, CTBookmark _ -> emptyList();
+            case ProofErr proofErr -> emptyList();
+            case Text text -> emptyList();
+            case R.CommentReference commentReference -> emptyList();
+            case CommentRangeEnd commentRangeEnd -> emptyList();
+            case CommentRangeStart commentRangeStart -> emptyList();
+            case Br br -> emptyList();
+            case R.LastRenderedPageBreak lastRenderedPageBreak -> emptyList();
+            case CTBookmark bookmark -> emptyList();
             default -> {
                 log.warn("Element {} not recognized", element);
                 yield emptyList();

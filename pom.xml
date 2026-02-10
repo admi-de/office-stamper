@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Office-stamper</name>
-    <groupId>pro.verron.office-stamper</groupId>
+    <groupId>de.admi.office-stamper</groupId>
     <artifactId>office-stamper</artifactId>
     <version>103.1.0</version>
     <description>
@@ -36,7 +36,7 @@
 
     <properties>
         <docx4j.version>11.5.9</docx4j.version>
-        <javafx.version>26-ea+22</javafx.version>
+        <javafx.version>21</javafx.version>
 
         <maven.compiler.release>21</maven.compiler.release>
         <maven.compiler.source>21</maven.compiler.source>
@@ -235,6 +235,14 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <extensions>
+            <extension>
+                <groupId>com.google.cloud.artifactregistry</groupId>
+                <artifactId>artifactregistry-maven-wagon</artifactId>
+                <version>2.2.0</version>
+            </extension>
+        </extensions>
     </build>
 
     <dependencyManagement>

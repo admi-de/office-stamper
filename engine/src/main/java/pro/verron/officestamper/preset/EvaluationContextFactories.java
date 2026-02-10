@@ -56,7 +56,7 @@ public class EvaluationContextFactories {
                     new MapAccessor()));
             standardEvaluationContext.setConstructorResolvers(emptyList());
             standardEvaluationContext.setMethodResolvers(new ArrayList<>(List.of(DataBindingMethodResolver.forInstanceMethodInvocation())));
-            standardEvaluationContext.setBeanResolver((_, _) -> {
+            standardEvaluationContext.setBeanResolver((a, b) -> {
                 throw new AccessException("Bean resolution not supported for security reasons.");
             });
             standardEvaluationContext.setTypeLocator(typeLocator);

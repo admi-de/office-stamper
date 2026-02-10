@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>pro.verron.office-stamper</groupId>
+        <groupId>de.admi.office-stamper</groupId>
         <artifactId>office-stamper</artifactId>
-        <version>3.1</version>
+        <version>103.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -77,15 +77,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>pro.verron.office-stamper</groupId>
+            <groupId>de.admi.office-stamper</groupId>
             <artifactId>utils</artifactId>
-            <version>3.1</version>
+            <version>103.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>pro.verron.office-stamper</groupId>
+            <groupId>de.admi.office-stamper</groupId>
             <artifactId>asciidoc</artifactId>
-            <version>3.1</version>
+            <version>103.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -149,4 +149,14 @@
         </profile>
     </profiles>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/public-java-packages</url>
+        </snapshotRepository>
+        <repository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/public-java-packages</url>
+        </repository>
+    </distributionManagement>
 </project>

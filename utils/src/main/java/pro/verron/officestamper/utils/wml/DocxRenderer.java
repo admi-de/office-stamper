@@ -332,14 +332,14 @@ public class DocxRenderer {
             case CTBlipFillProperties bfp -> stringify(bfp, part);
             case CTBlip blip -> stringify(blip, part);
             case Br br -> stringify(br);
-            case R.Tab _ -> "\t";
-            case R.Cr _ -> "<carriage return>\n";
+            case R.Tab r -> "\t";
+            case R.Cr cr -> "<carriage return>\n";
             case R.CommentReference cr -> stringify(cr);
             case CommentRangeStart crs -> stringify(crs);
             case CommentRangeEnd cre -> stringify(cre);
             case SdtBlock block -> stringify(block, part);
             case Pict pict -> stringify(pict.getAnyAndAny(), part);
-            case CTShapetype _ -> "jsldkflksdhlkfhszdlkfnsdl";
+            case CTShapetype st -> "jsldkflksdhlkfhszdlkfnsdl";
             case VmlShapeElements vmlShapeElements -> stringify(vmlShapeElements, part);
             case CTTextbox ctTextbox -> stringify(ctTextbox.getTxbxContent(), part);
             case CTTxbxContent content -> stringify(content.getContent(), part);
@@ -352,9 +352,16 @@ public class DocxRenderer {
             case P.Hyperlink hyperlink -> stringify(hyperlink, part).orElse("");
             case CTSmartTagRun smartTagRun -> stringify(smartTagRun, part);
             case CTAttr ctAttr -> stringify(ctAttr);
-            case R.Separator _, R.ContinuationSeparator _ -> "\n";
-            case AlternateContent _, R.LastRenderedPageBreak _, CTShadow _, CTMarkupRange _, ProofErr _,
-                 R.AnnotationRef _, R.FootnoteRef _, R.EndnoteRef _ -> "";
+            case R.Separator rs -> "\n";
+            case R.ContinuationSeparator rcs -> "\n";
+            case AlternateContent a -> "";
+            case R.LastRenderedPageBreak b -> "";
+            case CTShadow c -> "";
+            case CTMarkupRange d -> "";
+            case ProofErr e -> "";
+            case R.AnnotationRef f -> "";
+            case R.FootnoteRef g -> "";
+            case R.EndnoteRef h -> "";
             case null -> throw new RuntimeException("Unsupported content: NULL");
             default -> throw new RuntimeException("Unsupported content: " + o.getClass());
         };
@@ -479,23 +486,23 @@ public class DocxRenderer {
                        .toString()));
         ofNullable(pPr.getPageBreakBefore()).ifPresent(element -> set.put("pageBreakBefore",
                 String.valueOf(element.isVal())));
-        ofNullable(pPr.getPBdr()).ifPresent(_ -> set.put("pBdr", "xxx"));
-        ofNullable(pPr.getPPrChange()).ifPresent(_ -> set.put("pPrChange", "xxx"));
+        ofNullable(pPr.getPBdr()).ifPresent(v -> set.put("pBdr", "xxx"));
+        ofNullable(pPr.getPPrChange()).ifPresent(v -> set.put("pPrChange", "xxx"));
         stringify(pPr.getRPr()).ifPresent(key -> set.put("rPr", key));
         stringify(pPr.getSectPr()).ifPresent(key -> set.put("sectPr", key));
-        ofNullable(pPr.getShd()).ifPresent(_ -> set.put("shd", "xxx"));
+        ofNullable(pPr.getShd()).ifPresent(v -> set.put("shd", "xxx"));
         stringify(pPr.getSpacing()).ifPresent(spacing -> set.put("spacing", spacing));
-        ofNullable(pPr.getSuppressAutoHyphens()).ifPresent(_ -> set.put("suppressAutoHyphens", "xxx"));
-        ofNullable(pPr.getSuppressLineNumbers()).ifPresent(_ -> set.put("suppressLineNumbers", "xxx"));
-        ofNullable(pPr.getSuppressOverlap()).ifPresent(_ -> set.put("suppressOverlap", "xxx"));
-        ofNullable(pPr.getTabs()).ifPresent(_ -> set.put("tabs", "xxx"));
-        ofNullable(pPr.getTextAlignment()).ifPresent(_ -> set.put("textAlignment", "xxx"));
-        ofNullable(pPr.getTextDirection()).ifPresent(_ -> set.put("textDirection", "xxx"));
-        ofNullable(pPr.getTopLinePunct()).ifPresent(_ -> set.put("topLinePunct", "xxx"));
-        ofNullable(pPr.getWidowControl()).ifPresent(_ -> set.put("widowControl", "xxx"));
-        ofNullable(pPr.getFramePr()).ifPresent(_ -> set.put("framePr", "xxx"));
-        ofNullable(pPr.getWordWrap()).ifPresent(_ -> set.put("wordWrap", "xxx"));
-        ofNullable(pPr.getDivId()).ifPresent(_ -> set.put("divId", "xxx"));
+        ofNullable(pPr.getSuppressAutoHyphens()).ifPresent(v -> set.put("suppressAutoHyphens", "xxx"));
+        ofNullable(pPr.getSuppressLineNumbers()).ifPresent(v -> set.put("suppressLineNumbers", "xxx"));
+        ofNullable(pPr.getSuppressOverlap()).ifPresent(v -> set.put("suppressOverlap", "xxx"));
+        ofNullable(pPr.getTabs()).ifPresent(v -> set.put("tabs", "xxx"));
+        ofNullable(pPr.getTextAlignment()).ifPresent(v -> set.put("textAlignment", "xxx"));
+        ofNullable(pPr.getTextDirection()).ifPresent(v -> set.put("textDirection", "xxx"));
+        ofNullable(pPr.getTopLinePunct()).ifPresent(v -> set.put("topLinePunct", "xxx"));
+        ofNullable(pPr.getWidowControl()).ifPresent(v -> set.put("widowControl", "xxx"));
+        ofNullable(pPr.getFramePr()).ifPresent(v -> set.put("framePr", "xxx"));
+        ofNullable(pPr.getWordWrap()).ifPresent(v -> set.put("wordWrap", "xxx"));
+        ofNullable(pPr.getDivId()).ifPresent(v -> set.put("divId", "xxx"));
         ofNullable(pPr.getCnfStyle()).ifPresent(style -> set.put("cnfStyle", style.getVal()));
         return set.entrySet()
                   .stream()
@@ -525,7 +532,7 @@ public class DocxRenderer {
         if (rPr == null) return empty();
         var map = new TreeMap<String, String>();
         ofNullable(rPr.getB()).ifPresent(value -> map.put("b", String.valueOf(value.isVal())));
-        ofNullable(rPr.getBdr()).ifPresent(_ -> map.put("bdr", "xxx"));
+        ofNullable(rPr.getBdr()).ifPresent(v -> map.put("bdr", "xxx"));
         ofNullable(rPr.getCaps()).ifPresent(value -> map.put("caps", String.valueOf(value.isVal())));
         ofNullable(rPr.getColor()).ifPresent(value -> map.put("color", value.getVal()));
         ofNullable(rPr.getDstrike()).ifPresent(value -> map.put("dstrike", String.valueOf(value.isVal())));
@@ -605,16 +612,16 @@ public class DocxRenderer {
                 value));
         stringify(sectPr.getPgSz()).ifPresent(value -> map.put("pgSz", value));
         stringify(sectPr.getPgMar()).ifPresent(value -> map.put("pgMar", value));
-        ofNullable(sectPr.getPaperSrc()).ifPresent(_ -> map.put("paperSrc", "xxx"));
-        ofNullable(sectPr.getBidi()).ifPresent(_ -> map.put("bidi", "xxx"));
-        ofNullable(sectPr.getRtlGutter()).ifPresent(_ -> map.put("rtlGutter", "xxx"));
+        ofNullable(sectPr.getPaperSrc()).ifPresent(v -> map.put("paperSrc", "xxx"));
+        ofNullable(sectPr.getBidi()).ifPresent(v -> map.put("bidi", "xxx"));
+        ofNullable(sectPr.getRtlGutter()).ifPresent(v -> map.put("rtlGutter", "xxx"));
         stringify(sectPr.getDocGrid()).ifPresent(value -> map.put("docGrid", value));
-        ofNullable(sectPr.getFormProt()).ifPresent(_ -> map.put("formProt", "xxx"));
-        ofNullable(sectPr.getVAlign()).ifPresent(_ -> map.put("vAlign", "xxx"));
-        ofNullable(sectPr.getNoEndnote()).ifPresent(_ -> map.put("noEndnote", "xxx"));
-        ofNullable(sectPr.getTitlePg()).ifPresent(_ -> map.put("titlePg", "xxx"));
-        ofNullable(sectPr.getTextDirection()).ifPresent(_ -> map.put("textDirection", "xxx"));
-        ofNullable(sectPr.getRtlGutter()).ifPresent(_ -> map.put("rtlGutter", "xxx"));
+        ofNullable(sectPr.getFormProt()).ifPresent(v -> map.put("formProt", "xxx"));
+        ofNullable(sectPr.getVAlign()).ifPresent(v -> map.put("vAlign", "xxx"));
+        ofNullable(sectPr.getNoEndnote()).ifPresent(v -> map.put("noEndnote", "xxx"));
+        ofNullable(sectPr.getTitlePg()).ifPresent(v -> map.put("titlePg", "xxx"));
+        ofNullable(sectPr.getTextDirection()).ifPresent(v -> map.put("textDirection", "xxx"));
+        ofNullable(sectPr.getRtlGutter()).ifPresent(v -> map.put("rtlGutter", "xxx"));
         return map.isEmpty() ? empty() : of(stringify(map));
     }
 

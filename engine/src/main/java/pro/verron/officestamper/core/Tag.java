@@ -113,7 +113,7 @@ public record Tag(DocxPart docxPart, CTSmartTagRun tag) {
         for (CTAttr attribute : smartTagPrAttr) {
             if ("context".equals(attribute.getName())) try {
                 return String.valueOf(Integer.parseInt(attribute.getVal()));
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException e) {
                 return String.valueOf(0);
             }
         }
