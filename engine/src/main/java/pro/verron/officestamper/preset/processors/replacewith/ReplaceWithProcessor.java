@@ -1,70 +1,43 @@
 package pro.verron.officestamper.preset.processors.replacewith;
 
-import org.docx4j.wml.R;
-import org.springframework.lang.Nullable;
-import pro.verron.officestamper.api.AbstractCommentProcessor;
+import org.jspecify.annotations.Nullable;
 import pro.verron.officestamper.api.CommentProcessor;
-import pro.verron.officestamper.api.DocxPart;
-import pro.verron.officestamper.api.ParagraphPlaceholderReplacer;
+import pro.verron.officestamper.api.Insert;
+import pro.verron.officestamper.api.OfficeStamperException;
+import pro.verron.officestamper.api.ProcessorContext;
 import pro.verron.officestamper.preset.CommentProcessorFactory;
-import pro.verron.officestamper.utils.WmlFactory;
 
-import java.util.List;
-import java.util.function.Function;
+import static pro.verron.officestamper.utils.wml.WmlFactory.newRun;
 
-/// Processor that replaces the current run with the provided expression.
-/// This is useful for replacing an expression in a comment with the result of the expression.
+/// Processor that replaces the current run with the provided expression. This is useful for replacing an expression in
+/// a comment with the result of the expression.
 ///
 /// @author Joseph Verron
 /// @author Tom Hombergs
 /// @version ${version}
 /// @since 1.0.7
 public class ReplaceWithProcessor
-        extends AbstractCommentProcessor
+        extends CommentProcessor
         implements CommentProcessorFactory.IReplaceWithProcessor {
 
-    private final Function<R, List<Object>> nullSupplier;
-
-    private ReplaceWithProcessor(
-            ParagraphPlaceholderReplacer placeholderReplacer,
-            Function<R, List<Object>> nullSupplier
-    ) {
-        super(placeholderReplacer);
-        this.nullSupplier = nullSupplier;
-    }
-
-    /// Creates a new processor that replaces the current run with the result of the expression.
+    /// Constructs a new [ReplaceWithProcessor] instance.
     ///
-    /// @param pr the placeholder replacer to use
+    /// @param processorContext the context in which this processor operates, providing access to document
+    ///         manipulation and expression evaluation utilities.
+    public ReplaceWithProcessor(ProcessorContext processorContext) {
+        super(processorContext);
+    }
+
+    /// Replaces the content between the start and end of the comment with the given expression.
     ///
-    /// @return the processor
-    public static CommentProcessor newInstance(ParagraphPlaceholderReplacer pr) {
-        return new ReplaceWithProcessor(pr, R::getContent);
-    }
-
-    /// {@inheritDoc}
-    @Override
-    public void commitChanges(DocxPart document) {
-        // nothing to commit
-    }
-
-    /// {@inheritDoc}
-    @Override
-    public void reset() {
-        // nothing to reset
-    }
-
-    /// {@inheritDoc}
-    @Override
-    public void replaceWordWith(@Nullable String expression) {
-        replaceWith(expression);
-    }
-
+    /// @param expression The expression to replace the content with. Must not be null.
+    ///
+    /// @throws OfficeStamperException if the expression is null, or if the comment range start or end is null.
     @Override
     public void replaceWith(@Nullable String expression) {
-        var comment = this.getCurrentCommentWrapper();
-        var from = comment.getCommentRangeStart();
-        var to = comment.getCommentRangeEnd();
-        getParagraph().replace(from, to, WmlFactory.newRun(expression));
+        if (expression == null) throw new OfficeStamperException("Cannot replace with null expression");
+        var from = comment().getStartTagRun();
+        var to = comment().getCommentRangeEnd();
+        paragraph().replace(from, to, new Insert(newRun(expression)));
     }
 }

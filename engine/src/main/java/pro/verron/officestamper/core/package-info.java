@@ -1,7 +1,8 @@
-/// This package provides the core functionality for docxstamper.
+/// Provides the core functionality for the OfficeStamper library.
+/// This package contains essential components for document processing.
 ///
-/// Third-party should not depend on it.
-@NonNullApi
+/// Ensures non-null values by default.
+@NullMarked
 package pro.verron.officestamper.core;
 
-import org.springframework.lang.NonNullApi;
+import org.jspecify.annotations.NullMarked;

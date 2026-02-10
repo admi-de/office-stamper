@@ -1,26 +1,27 @@
 package pro.verron.officestamper.test;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import pro.verron.officestamper.api.OfficeStamperConfiguration;
 import pro.verron.officestamper.preset.OfficeStamperConfigurations;
+import pro.verron.officestamper.test.utils.ObjectContextFactory;
+import pro.verron.officestamper.test.utils.ResourceUtils;
 
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assumptions.abort;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static pro.verron.officestamper.preset.OfficeStamperConfigurations.full;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standard;
-import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standardWithPreprocessing;
-import static pro.verron.officestamper.test.TestUtils.getResource;
+import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
+import static pro.verron.officestamper.test.utils.DocxFactory.makeWordResource;
+import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
+import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 class RegressionTests {
     public static final ObjectContextFactory FACTORY = new ObjectContextFactory();
@@ -28,97 +29,109 @@ class RegressionTests {
 
     public static Stream<Arguments> source52() {
         return Stream.of(arguments(Conditions.values(), ""),
-                arguments(Conditions.values(true), "Start\nHello, World!\nEnd\n"),
-                arguments(Conditions.values(false), "Start\nEnd\n"),
-                arguments(Conditions.values(true, true), "Start\nHello, World!\nEnd\nStart\nHello, World!\nEnd\n"),
-                arguments(Conditions.values(true, false), "Start\nHello, World!\nEnd\nStart\nEnd\n"),
-                arguments(Conditions.values(false, true), "Start\nEnd\nStart\nHello, World!\nEnd\n"),
-                arguments(Conditions.values(false, false), "Start\nEnd\nStart\nEnd\n"));
+                arguments(Conditions.values(true), "Start\n\nHello, World!\n\nEnd\n\n"),
+                arguments(Conditions.values(false), "Start\n\nEnd\n\n"),
+                arguments(Conditions.values(true, true),
+                        "Start\n\nHello, World!\n\nEnd\n\nStart\n\nHello, World!\n\nEnd\n\n"),
+                arguments(Conditions.values(true, false), "Start\n\nHello, World!\n\nEnd\n\nStart\n\nEnd\n\n"),
+                arguments(Conditions.values(false, true), "Start\n\nEnd\n\nStart\n\nHello, World!\n\nEnd\n\n"),
+                arguments(Conditions.values(false, false), "Start\n\nEnd\n\nStart\n\nEnd\n\n"));
     }
 
     /// Test that table of content specific instruction text (instrText) is not modified by error
     @Test
     void testTableOfContent() {
         var configuration = OfficeStamperConfigurations.standard();
-        var stamper = givenStamper(configuration);
-        var template = getResource(Path.of("TOC.docx"));
-        var context = givenContext();
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var stamper = docxPackageStamper(configuration);
+        var template = getWordResource(Path.of("TOC.docx"));
+        var context = new Object();
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
         var expected = """
                 == Table Of Content
                 
+                
                 [toc 1] [instrText= TOC \\o "1-3" \\h \\z \\u ][link data=❬Table Of Content❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699773 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 1] [link data=❬First Title❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699774 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 2] [link data=❬Subtitle 1.1❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699775 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 1] [link data=❬Second Title❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699776 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 2] [link data=❬Subtitle 2.1❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699777 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 2] [link data=❬Subtitle 2.2❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699778 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 2] [link data=❬Subtitle 2.3❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699779 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 1] [link data=❬Third Title❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699780 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 2] [link data=❬Subtitle 3.1❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699781 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 [toc 2] [link data=❬Subtitle 3.2❘{rStyle=Lienhypertexte}❭❬	❘{webHidden=true}❭❬[instrText= PAGEREF _Toc201699782 \\h ]❘{webHidden=true}❭❬1❘{webHidden=true}❭]<tabs=xxx>
+                
                 == First Title
+                
                 
                 === Subtitle 1.1
                 
+                
                 == Second Title
+                
                 
                 === Subtitle 2.1
                 
+                
                 === Subtitle 2.2
+                
                 
                 === Subtitle 2.3
                 
+                
                 == Third Title
+                
                 
                 === Subtitle 3.1
                 
+                
                 === Subtitle 3.2
+                
+                
                 
                 
                 """;
         assertEquals(expected, actual);
     }
 
-    private static OfficeStamperConfiguration givenConfiguration() {
-        return standardWithPreprocessing();
-    }
-
-    private static TestDocxStamper<Object> givenStamper(OfficeStamperConfiguration configuration) {
-        return new TestDocxStamper<>(configuration);
-    }
-
     @Test
     void test64() {
-        var configuration = givenConfiguration();
+        var configuration = full();
         var testFunction = new TestFunction.TestFunctionImpl();
         configuration.exposeInterfaceToExpressionLanguage(TestFunction.class, testFunction);
-        var stamper = givenStamper(configuration);
-        var template = givenTemplate("${test()}");
-        var context = givenContext();
-        var actual = stamper.stampAndLoadAndExtract(template, context);
-        assertEquals("\n", actual);
+        var stamper = docxPackageStamper(configuration);
+        var template = makeWordResource("${test()}");
+        var context = new Object();
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
+        assertEquals("""
+                
+                
+                """, actual);
         assertEquals(1, testFunction.counter());
-    }
-
-    private static InputStream givenTemplate(String str) {
-        return TestUtils.makeResource(str);
-    }
-
-    private static Object givenContext() {
-        return new Object();
     }
 
     @Test
     void test114() {
-        abort("Will be worked on after 2.7.0");
         var config = standard();
-        var stamper = new TestDocxStamper<>(config);
-        var template = getResource(Path.of("#114.docx"));
+        var stamper = docxPackageStamper(config);
+        var template = getWordResource(Path.of("#114.docx"));
         var context = FACTORY.names(List.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var stamped = stamper.stamp(template, context);
+        var actual = docxToString(stamped);
         var expected = """
                 = Issue #114
+                
                 
                 |===
                 |Name
@@ -133,6 +146,8 @@ class RegressionTests {
                 
                 |Maggie
                 
+                |So…
+                
                 
                 |===
                 
@@ -144,14 +159,11 @@ class RegressionTests {
     @MethodSource("source52")
     @ParameterizedTest
     void test52(Conditions conditions, String expected) {
-        var stamper = givenStamper(givenConfiguration());
-        var template = givenTemplate(TEMPLATE_52);
-        var actual = stamper.stampAndLoadAndExtract(template, conditions);
+        var stamper = docxPackageStamper(OfficeStamperConfigurations.full());
+        var template = ResourceUtils.getWordResource(TEMPLATE_52);
+        var wordprocessingMLPackage = stamper.stamp(template, conditions);
+        var actual = docxToString(wordprocessingMLPackage);
         assertEquals(expected, actual);
-    }
-
-    private static InputStream givenTemplate(Path path) {
-        return TestUtils.getResource(path);
     }
 
     public interface TestFunction {
@@ -172,7 +184,13 @@ class RegressionTests {
         }
     }
 
-    record Condition(boolean condition) {}
+    record Condition(boolean condition) {
+        @Override
+        @NonNull
+        public String toString() {
+            return String.valueOf(condition);
+        }
+    }
 
     record Conditions(List<Condition> conditions) {
         private static Conditions values(boolean... bits) {
@@ -182,11 +200,9 @@ class RegressionTests {
         }
 
         @Override
+        @NonNull
         public String toString() {
-            return conditions.stream()
-                             .map(Condition::condition)
-                             .map(Objects::toString)
-                             .collect(joining(",", "(", ")"));
+            return String.valueOf(conditions);
         }
     }
 }

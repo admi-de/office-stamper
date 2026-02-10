@@ -4,16 +4,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import pro.verron.officestamper.test.utils.ContextFactory;
 
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static pro.verron.officestamper.preset.EvaluationContextConfigurers.noopConfigurer;
-import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standardWithPreprocessing;
-import static pro.verron.officestamper.test.ContextFactory.mapContextFactory;
-import static pro.verron.officestamper.test.ContextFactory.objectContextFactory;
+import static pro.verron.officestamper.preset.EvaluationContextFactories.noopFactory;
+import static pro.verron.officestamper.preset.OfficeStamperConfigurations.full;
+import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
+import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
+import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
+import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
+import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 class SpelInstantiationTest {
 
@@ -25,16 +29,21 @@ class SpelInstantiationTest {
     @MethodSource("factories")
     @ParameterizedTest
     void testDateInstantiationAndResolution(ContextFactory factory) {
-        var stamperConfiguration = standardWithPreprocessing().setEvaluationContextConfigurer(noopConfigurer());
-        var stamper = new TestDocxStamper<>(stamperConfiguration);
-        var templateStream = TestUtils.getResource(Path.of("date.docx"));
+        var configuration = full().setEvaluationContextFactory(noopFactory());
+        var stamper = docxPackageStamper(configuration);
+        var template = getWordResource(Path.of("date.docx"));
         var context = factory.empty();
-        var actual = stamper.stampAndLoadAndExtract(templateStream, context);
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
         var expected = """
                 01.01.1970
+                
                 2000-01-01
+                
                 12:00:00
+                
                 2000-01-01T12:00:00
+                
                 """;
         assertEquals(expected, actual);
     }

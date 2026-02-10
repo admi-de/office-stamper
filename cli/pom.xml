@@ -4,73 +4,25 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>pro.verron.office-stamper</groupId>
+        <artifactId>office-stamper</artifactId>
+        <version>3.1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <name>Office-stamper CLI</name>
-    <groupId>pro.verron.office-stamper</groupId>
-    <artifactId>office-stamper-cli</artifactId>
-    <version>2.9.0</version>
-
+    <artifactId>cli</artifactId>
     <packaging>jar</packaging>
-
-    <properties>
-        <vendor.name>Caring Coder</vendor.name>
-        <copyright>Caring Coder@2025</copyright>
-        <maven.compiler.release>21</maven.compiler.release>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <description>
+        Command Line Interface for Office-Stamper, a Java library for stamping DOCX templates with data
+    </description>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}</finalName>
-        <pluginManagement>
-            <plugins>
-
-                <plugin>
-                    <groupId>com.github.akman</groupId>
-                    <artifactId>jpackage-maven-plugin</artifactId>
-                    <version>0.1.5</version>
-                    <executions>
-                        <execution>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>jpackage</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <name>${project.artifactId}</name>
-                        <appversion>${project.version}</appversion>
-                        <copyright>${copyright}</copyright>
-                        <vendor>${vendor.name}</vendor>
-                        <mainjar>${project.artifactId}-${project.version}-jar-with-dependencies.jar</mainjar>
-                        <mainclass>pro.verron.officestamper.Main</mainclass>
-                        <input>target/</input>
-                    </configuration>
-                </plugin>
-
-            </plugins>
-        </pluginManagement>
         <plugins>
-            <plugin>
-                <groupId>com.github.akman</groupId>
-                <artifactId>jpackage-maven-plugin</artifactId>
-                <version>0.1.5</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.source}</target>
-                    <release>${maven.compiler.source}</release>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -96,44 +48,98 @@
 
     <dependencies>
         <dependency>
-            <groupId>info.picocli</groupId>
-            <artifactId>picocli</artifactId>
-            <version>4.7.7</version>
-        </dependency>
-
-        <dependency>
             <groupId>pro.verron.office-stamper</groupId>
             <artifactId>engine</artifactId>
-            <version>2.9.0</version>
+            <version>${project.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>6.2.12</version>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>2.0.17</version>
         </dependency>
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
-            <version>5.12.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.20.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.21.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>mut</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <configuration>
+                            <jvmArgs>
+                                <jvmArg>--add-opens</jvmArg>
+                                <jvmArg>java.base/java.lang=ALL-UNNAMED</jvmArg>
+                            </jvmArgs>
+                            <features>
+                                <feature>+auto_threads</feature>
+                            </features>
+                            <useSlf4j>true</useSlf4j>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>1.2.3</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.slf4j</groupId>
+                                <artifactId>slf4j-nop</artifactId>
+                                <version>2.0.17</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>mutationCoverage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                    </plugin>
+                </plugins>
+            </reporting>
+        </profile>
+    </profiles>
 
 </project>

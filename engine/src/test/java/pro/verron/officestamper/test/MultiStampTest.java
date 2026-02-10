@@ -5,14 +5,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import pro.verron.officestamper.preset.OfficeStamperConfigurations;
+import pro.verron.officestamper.test.utils.ContextFactory;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static pro.verron.officestamper.test.ContextFactory.mapContextFactory;
-import static pro.verron.officestamper.test.ContextFactory.objectContextFactory;
-import static pro.verron.officestamper.test.TestUtils.getResource;
+import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
+import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
+import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
+import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
+import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 /// @author Joseph Verron
 /// @author Tom Hombergs
@@ -28,13 +31,15 @@ class MultiStampTest {
     void repeatDocPart(ContextFactory factory) {
         var config = OfficeStamperConfigurations.standard();
         var context = factory.names("Homer", "Marge", "Bart", "Lisa", "Maggie");
-        var stamper = new TestDocxStamper<>(config);
+        var stamper = docxPackageStamper(config);
 
         var filename = "MultiStampTest.docx";
-        var template1 = getResource(filename);
-        var document1 = stamper.stampAndLoadAndExtract(template1, context);
+        var template = getWordResource(filename);
+        var stamped = stamper.stamp(template, context);
+        var actual = docxToString(stamped);
         assertEquals("""
                 == Multi-Stamp-Test
+                
                 
                 |===
                 |The next row will repeat multiple times with a different name:
@@ -52,12 +57,15 @@ class MultiStampTest {
                 
                 |===
                 
-                """, document1);
+                
+                """, actual);
 
-        var template2 = getResource(filename);
-        var document2 = stamper.stampAndLoadAndExtract(template2, context);
+        var template2 = getWordResource(filename);
+        var wordprocessingMLPackage = stamper.stamp(template2, context);
+        var document2 = docxToString(wordprocessingMLPackage);
         assertEquals("""
                 == Multi-Stamp-Test
+                
                 
                 |===
                 |The next row will repeat multiple times with a different name:
@@ -74,6 +82,7 @@ class MultiStampTest {
                 
                 
                 |===
+                
                 
                 """, document2);
     }

@@ -5,14 +5,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import pro.verron.officestamper.preset.OfficeStamperConfigurations;
+import pro.verron.officestamper.test.utils.ContextFactory;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static pro.verron.officestamper.test.ContextFactory.mapContextFactory;
-import static pro.verron.officestamper.test.ContextFactory.objectContextFactory;
-import static pro.verron.officestamper.test.TestUtils.makeResource;
+import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
+import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
+import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
+import static pro.verron.officestamper.test.utils.DocxFactory.makeWordResource;
+import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 @DisplayName("Whitespaces manipulations") class WhitespaceTest {
 
@@ -31,29 +34,34 @@ import static pro.verron.officestamper.test.TestUtils.makeResource;
 
     @DisplayName("Should keep any number of spaces")
     @MethodSource
-    @ParameterizedTest
+    @ParameterizedTest(name = "Should keep any number of spaces ({argumentSetName})")
     void should_preserve_spaces(ContextFactory factory, String in, String out) {
         var config = OfficeStamperConfigurations.standard();
-        var template = makeResource("Space ${name}");
+        var template = makeWordResource("Space ${name}");
         var context = factory.name(in);
 
-        var stamper = new TestDocxStamper<>(config);
-        var actual = stamper.stampAndLoadAndExtract(template, context);
-        var expected = "Space %s\n".formatted(out);
+        var stamper = docxPackageStamper(config);
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
+        var expected = """
+                Space %s
+                
+                """.formatted(out);
         assertEquals(expected, actual);
     }
 
     @DisplayName("Should keep tabulations as tabulations")
     @MethodSource
-    @ParameterizedTest
+    @ParameterizedTest(name = "Should keep tabulations as tabulations ({argumentSetName})")
     void should_preserve_tabulations(ContextFactory factory) {
         var config = OfficeStamperConfigurations.standard();
-        var template = makeResource("Tab|TAB|${name}");
+        var template = makeWordResource("Tab|TAB|${name}");
         var context = factory.name("Homer\tSimpson");
 
-        var stamper = new TestDocxStamper<>(config);
-        var actual = stamper.stampAndLoadAndExtract(template, context);
-        var expected = "Tab\tHomer\tSimpson\n";
+        var stamper = docxPackageStamper(config);
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
+        var expected = "Tab\tHomer\tSimpson\n\n";
         assertEquals(expected, actual);
     }
 }

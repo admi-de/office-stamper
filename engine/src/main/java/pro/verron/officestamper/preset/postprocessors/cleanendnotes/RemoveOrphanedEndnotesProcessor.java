@@ -6,15 +6,19 @@ import org.docx4j.wml.CTEndnotes;
 import org.docx4j.wml.CTFtnEdn;
 import pro.verron.officestamper.api.PostProcessor;
 import pro.verron.officestamper.preset.postprocessors.NoteRefsVisitor;
-import pro.verron.officestamper.utils.WmlUtils;
+import pro.verron.officestamper.utils.wml.WmlUtils;
 
 import java.util.Collection;
 import java.util.Optional;
 
 import static org.docx4j.wml.STFtnEdn.NORMAL;
 import static pro.verron.officestamper.api.OfficeStamperException.throwing;
-import static pro.verron.officestamper.core.DocumentUtil.visitDocument;
+import static pro.verron.officestamper.utils.wml.WmlUtils.visitDocument;
 
+/// A post-processor that removes endnotes which are not referenced in the document.
+///
+/// This processor analyzes the document to find all endnote references and then removes any endnotes that are not
+/// referenced. It helps keep the document clean by eliminating orphaned endnotes.
 public class RemoveOrphanedEndnotesProcessor
         implements PostProcessor {
     @Override

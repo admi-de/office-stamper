@@ -13,6 +13,7 @@ import java.util.prefs.Preferences;
 
 import static java.util.stream.Collectors.toMap;
 
+/// Diagnostic class for collecting system information.
 public final class Diagnostic {
 
     private static final Logger logger = Utils.getLogger();
@@ -23,11 +24,27 @@ public final class Diagnostic {
     private final Map<String, String> environmentVariables;
 
     private Diagnostic() {
-        this.date = LocalDate.now();
-        this.user = System.getenv("USERNAME");
-        this.userPreferences = extractUserPreferences();
-        this.jvmProperties = extractJvmProperties();
-        this.environmentVariables = extractEnvironmentVariables();
+        this(
+                LocalDate.now(),
+                System.getenv("USERNAME"),
+                extractUserPreferences(),
+                extractJvmProperties(),
+                extractEnvironmentVariables()
+        );
+    }
+
+    private Diagnostic(
+            LocalDate date,
+            String user,
+            Map<String, String> userPreferences,
+            Map<String, String> jvmProperties,
+            Map<String, String> environmentVariables
+    ) {
+        this.date = date;
+        this.user = user;
+        this.userPreferences = userPreferences;
+        this.jvmProperties = jvmProperties;
+        this.environmentVariables = environmentVariables;
     }
 
     private static Map<String, String> extractUserPreferences() {
@@ -61,8 +78,11 @@ public final class Diagnostic {
     }
 
     static Object context() {
+        return context(new Diagnostic());
+    }
+
+    private static Object context(Diagnostic diagnosticMaker) {
         logger.info("Create a context with system environment variables, jvm properties, and user preferences");
-        var diagnosticMaker = new Diagnostic();
         var map = new TreeMap<String, Object>();
         map.put("reportDate", diagnosticMaker.date());
         map.put("reportUser", diagnosticMaker.user());
@@ -78,8 +98,14 @@ public final class Diagnostic {
         return map;
     }
 
+    /// Returns the diagnostic date.
+    ///
+    /// @return the date
     public LocalDate date() {return date;}
 
+    /// Returns the diagnostic user.
+    ///
+    /// @return the user
     public String user() {return user;}
 
     private Map<String, String> environmentVariables() {
@@ -92,6 +118,16 @@ public final class Diagnostic {
 
     private Map<String, String> userPreferences() {
         return userPreferences;
+    }
+
+    static Object context(
+            LocalDate date,
+            String user,
+            Map<String, String> userPreferences,
+            Map<String, String> jvmProperties,
+            Map<String, String> environmentVariables
+    ) {
+        return context(new Diagnostic(date, user, userPreferences, jvmProperties, environmentVariables));
     }
 
     static InputStream template() {

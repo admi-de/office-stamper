@@ -1,7 +1,7 @@
-/// This package provides presets and recommended configurations for docxstamper library users;
+/// This package contains the preset configurations and utilities for OfficeStamper.
 ///
-/// It should not be extended upon, put it can be used as a bootstrap for projects.
-@NonNullApi
+/// Ensures non-null values by default.
+@NullMarked
 package pro.verron.officestamper.preset;
 
-import org.springframework.lang.NonNullApi;
+import org.jspecify.annotations.NullMarked;

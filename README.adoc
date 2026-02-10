@@ -1,18 +1,18 @@
 // suppress inspection "AsciiDocLinkResolve" for whole file
 :proj: https://github.com/verronpro/office-stamper
 :repo: https://github.com/verronpro/office-stamper/blob/main
-:docs: https://verronpro.github.io/office-stamper
+:docs: https://verronpro.github.io/office-stamper/engine
 
 = Office-stamper
 
 image:{proj}/actions/workflows/integrate-os.yml/badge.svg[Build Status,link={proj}/actions/workflows/integrate-os.yml]
 image:{proj}/actions/workflows/integrate-docx4j.yml/badge.svg[Build Status,link={proj}/actions/workflows/integrate-docx4j.yml]
-image:{proj}/actions/workflows/analyze.yml/badge.svg[Build Status,link={proj}/actions/workflows/analyze.yml]
+image:{proj}/actions/workflows/qodana.yml/badge.svg[Build Status,link={proj}/actions/workflows/qodana.yml]
 image:{proj}/actions/workflows/pages.yml/badge.svg[Build Status,link={proj}/actions/workflows/pages.yml]
 
 == Introduction
 
-Office-stamper (formerly docx-stamper) is a Java template engine that allows for dynamic creation of DOCX documents at runtime.
+Office-stamper is a Java template engine that allows for dynamic creation of DOCX documents at runtime.
 You design a template using your preferred Word processor; and office-stamper will generate documents based on that template.
 
 == Key Features
@@ -29,22 +29,31 @@ You design a template using your preferred Word processor; and office-stamper wi
 [source,java]
 ----
 class Example {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         // an object to use as context for the expressions found in the template.
         var context = new YourPojoContext(_, _ , _);
 
+        // create a stamper that handles streams
         var stamper = OfficeStampers.docxStamper();
 
         var templatePath = Paths.get("your/docx/template/file.docx");
         var outputPath = Paths.get("your/desired/output/path.docx");
         try(
             var template = Files.newInputStream(templatePath);
-            var output = Files.newOutputStream(outputPath);
+            var output = Files.newOutputStream(outputPath)
         ) {
             stamper.stamp(template, context, output);
         }
     }
 }
+----
+
+If you already have a `WordprocessingMLPackage` (Docx4J document), you can use `docxPackageStamper` instead:
+
+[source,java]
+----
+var stamper = OfficeStampers.docxPackageStamper(OfficeStamperConfigurations.standard());
+WordprocessingMLPackage stamped = stamper.stamp(document, context);
 ----
 
 == Maven Coordinates
@@ -54,19 +63,19 @@ class Example {
 <dependency>
     <groupId>pro.verron.office-stamper</groupId>
     <artifactId>engine</artifactId>
-    <version>2.9.0</version>
+    <version>3.1</version>
 </dependency>
 
 <!-- You also need to provide a dependency to Docx4J -->
 <dependency>
     <groupId>org.docx4j</groupId>
     <artifactId>docx4j-core</artifactId>
-    <version>11.5.6</version>
+    <version>11.5.8</version>
 </dependency>
 <dependency>
     <groupId>org.docx4j</groupId>
     <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
-    <version>11.5.6</version>
+    <version>11.5.8</version>
 </dependency>
 ----
 
@@ -85,15 +94,62 @@ Comprehensive documentation is available at link:{docs}[verronpro.github.io/offi
 * link:{docs}/release-notes.html[Release Notes]
 * link:{docs}/contributing.html[Contributing]
 
+== Modules
+
+This repository is structured in several Maven/Java modules:
+
+* link:engine/src/site/asciidoc/index.adoc[Engine] – core templating engine and public API
+* link:utils/README.adoc[Utils] – low-level utilities shared by modules
+* link:asciidoc/README.adoc[AsciiDoc] – AsciiDoc to DOCX integration helpers
+* link:cli/README.adoc[CLI] – command line interface to stamp templates
+
 == Latest Release
 
-The latest release is v2.9.0. See the link:{docs}/release-notes.html[Release Notes] for details.
+The latest release is v3.1. See the link:{docs}/release-notes.html[Release Notes] for details.
+
+=== What's new in 3.1 (high level)
+
+* **API Consolidation**: Continued streamlining of the public API by moving core interfaces like `PlaceholderHooker`, `CommentHooker`, and `HookRemover` to the `pro.verron.officestamper.api` package.
+* **Internal Cleanup**: Removed several internal utility classes and simplified the engine's internal structure for better maintainability.
+* **Experimental Features**: Moved experimental stamper implementations to a dedicated `pro.verron.officestamper.experimental` package to clearly distinguish them from the stable API.
+* **Logging**: Refined logging levels; many verbose debug messages moved to trace level.
+
+=== What's new in 3.0 (high level)
+
+* Processing model overhaul: the engine now iterates hooks (placeholders, inline processors, comments) strictly in document order.
+See `3.0_UPDATE.md` for the full rationale and migration guidance.
+* New hook concept: each placeholder/comment is treated as a hook — the iterator walks hooks one by one.
+* Hierarchical scopes: `ContextTree` resolve placeholders along the current branch; unresolved values bubble up to parent scopes.
+* Preprocessor-driven placeholders: include the placeholder preprocessor in your `OfficeStamperConfiguration` (already present in standard presets) to enable resolution.
+* Comment processor lifecycle simplified: processors are created per comment and executed once.
+* Postprocessors added: `Postprocessors.removeTags(String)` can remove all smart tags used by the engine after processing.
+
+Breaking API highlights:
+
+* `AbstractCommentProcessor` → `CommentProcessor`; introduce `CommentProcessorFactory`.
+* `ContextDependent` renamed to `Hook` (in `pro.verron.officestamper.api`).
+* Preprocessors moved: `PlaceholderHooker` and `CommentHooker` are now public in `pro.verron.officestamper.api`.
+* Postprocessors moved: `HookRemover` is now public in `pro.verron.officestamper.api`.
+* `EvaluationContextConfigurer` → `EvaluationContextFactory` (fresh context per hook).
+* `DocxDocument` removed in favor of `DocxPart`.
+* New `Insert` API for multi-run insertions; `PlaceholderReplacer` removed.
+* `OfficeStamper` handles `OpcPackage`; use `StreamStamper` for stream-to-stream.
+* Expression parser is pluggable (`ExpressionParser`), SpEL by default.
+* `DocxStamper#stamp` now returns the document.
+* Java 23+ required; Maven release set to 25.
+
+Minor updates:
+
+* Spring dependencies bumped to 7.0.2 
+* New docs: `engine/src/site/asciidoc/how-to-custom.adoc` and `HOW_DOES_IT_WORKS.adoc`
+* Test matrix extended for Docx4J 11.5.7 and 11.5.8 
+* New modules: `asciidoc`, `utils`
 
 == Sample Code
 
 The source code contains a set of tests showing how to use the features.
-If you want to run them yourself, clone the repository and run `mvn test` with the system property `-DkeepOutputFile=true`
-so that the resulting .docx documents will not be cleaned up and let you view them.
+If you want to run them yourself, clone the repository and run `mvn test`.
+To view the resulting .docx documents, you can export the stamped documents with the method `stamped.save(OutputStream)`
 
 If you want to have a look at the .docx templates used in the tests, have a look at the link:{repo}/test/sources[sources subfolder] in the test folder.
 

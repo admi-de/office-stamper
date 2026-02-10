@@ -1,10 +1,10 @@
 package pro.verron.officestamper.preset;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.TypedValue;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.Map;
@@ -52,7 +52,7 @@ public class MapAccessor
     @SuppressWarnings("unchecked")
     public void write(EvaluationContext context, @Nullable Object target, String name, @Nullable Object newValue) {
         Assert.state(target instanceof Map, "Target must be of type Map");
-        Map<Object, Object> map = (Map<Object, Object>) target;
+        Map<Object, @Nullable Object> map = (Map<Object, Object>) target;
         map.put(name, newValue);
     }
 

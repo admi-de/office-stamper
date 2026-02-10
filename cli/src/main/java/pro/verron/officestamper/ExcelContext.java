@@ -5,7 +5,7 @@ import org.docx4j.openpackaging.packages.SpreadsheetMLPackage;
 import org.docx4j.openpackaging.parts.SpreadsheetML.WorkbookPart;
 import org.docx4j.openpackaging.parts.SpreadsheetML.WorksheetPart;
 import org.docx4j.openpackaging.parts.relationships.RelationshipsPart;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.xlsx4j.org.apache.poi.ss.usermodel.DataFormatter;
 import org.xlsx4j.sml.Row;
 import org.xlsx4j.sml.Sheet;
@@ -18,12 +18,17 @@ import java.util.*;
 
 import static java.util.Collections.emptyList;
 
+/// Context for Excel-based data.
 public class ExcelContext
         extends AbstractMap<String, List<Map<String, String>>> {
 
+    /// Data formatter for Excel cells.
     public static final DataFormatter formatter = new DataFormatter();
     private final Map<String, List<Map<String, String>>> source;
 
+    /// Constructs an ExcelContext from the specified spreadsheet package.
+    ///
+    /// @param spreadsheetPackage the spreadsheet package
     public ExcelContext(SpreadsheetMLPackage spreadsheetPackage) {
         var workbookPart = spreadsheetPackage.getWorkbookPart();
         var workbook = getWorkbook(workbookPart);
@@ -96,6 +101,11 @@ public class ExcelContext
         return formatter.formatCellValue(cells.get(i));
     }
 
+    /// Creates an ExcelContext from the specified input stream.
+    ///
+    /// @param inputStream the input stream
+    ///
+    /// @return the ExcelContext
     public static Object from(InputStream inputStream) {
         try {
             return from(SpreadsheetMLPackage.load(inputStream));
@@ -109,17 +119,17 @@ public class ExcelContext
     }
 
     @Override
-    public @NotNull Set<Entry<String, List<Map<String, String>>>> entrySet() {
+    public @NonNull Set<Entry<String, List<Map<String, String>>>> entrySet() {
         return source.entrySet();
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

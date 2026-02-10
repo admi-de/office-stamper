@@ -1,114 +1,140 @@
 package pro.verron.officestamper.preset.processors.repeat;
 
-import org.docx4j.TraversalUtil;
 import org.docx4j.XmlUtils;
-import org.docx4j.finders.ClassFinder;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.wml.ContentAccessor;
 import org.docx4j.wml.P;
-import org.docx4j.wml.Tbl;
-import org.docx4j.wml.Tr;
-import org.springframework.lang.Nullable;
+import org.docx4j.wml.PPr;
+import org.docx4j.wml.SectPr;
+import org.jspecify.annotations.Nullable;
+import org.jvnet.jaxb2_commons.ppp.Child;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pro.verron.officestamper.api.*;
-import pro.verron.officestamper.core.CommentUtil;
-import pro.verron.officestamper.core.StandardParagraph;
-import pro.verron.officestamper.preset.CommentProcessorFactory;
+import pro.verron.officestamper.preset.CommentProcessorFactory.IRepeatProcessor;
+import pro.verron.officestamper.utils.wml.WmlFactory;
+import pro.verron.officestamper.utils.wml.WmlUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
 
-/// Repeats a table row for each element in a list.
-///
-/// @author Joseph Verron
-/// @author Tom Hombergs
-/// @version ${version}
-/// @since 1.0.0
 public class RepeatProcessor
-        extends AbstractCommentProcessor
-        implements CommentProcessorFactory.IRepeatProcessor {
+        extends CommentProcessor
+        implements IRepeatProcessor {
+    private static final Logger log = LoggerFactory.getLogger(RepeatProcessor.class);
 
-    private final BiFunction<WordprocessingMLPackage, Tr, List<Tr>> nullSupplier;
-    private Map<Tr, Iterable<Object>> tableRowsToRepeat = new HashMap<>();
-    private Map<Tr, Comment> tableRowsCommentsToRemove = new HashMap<>();
-
-    private RepeatProcessor(
-            ParagraphPlaceholderReplacer placeholderReplacer,
-            BiFunction<WordprocessingMLPackage, Tr, List<Tr>> nullSupplier1
-    ) {
-        super(placeholderReplacer);
-        nullSupplier = nullSupplier1;
+    /// Constructs a new instance of CommentProcessor to process comments and placeholders within a paragraph.
+    ///
+    /// @param context the context containing the paragraph, comment, and placeholder associated with the
+    ///         processing of this CommentProcessor.
+    public RepeatProcessor(ProcessorContext context) {
+        super(context);
     }
 
-    /// Creates a new RepeatProcessor.
-    ///
-    /// @param pr The PlaceholderReplacer to use.
-    ///
-    /// @return A new RepeatProcessor.
-    public static CommentProcessor newInstance(ParagraphPlaceholderReplacer pr) {
-        return new RepeatProcessor(pr, (document, row) -> emptyList());
-    }
-
-    /// {@inheritDoc}
     @Override
-    public void commitChanges(DocxPart source) {
-        repeatRows(source);
-    }
-
-    private void repeatRows(DocxPart source) {
-        for (Map.Entry<Tr, Iterable<Object>> entry : tableRowsToRepeat.entrySet()) {
-            Tr row = entry.getKey();
-            Iterable<Object> expressionContexts = entry.getValue();
-
-            Tbl table = (Tbl) XmlUtils.unwrap(row.getParent());
-            var content = table.getContent();
-            int index = content.indexOf(row);
-            content.remove(row);
-
-            List<Tr> changes;
-            if (expressionContexts == null) {
-                changes = nullSupplier.apply(source.document(), row);
-            }
-            else {
-                changes = new ArrayList<>();
-                for (Object expressionContext : expressionContexts) {
-                    Tr rowClone = XmlUtils.deepCopy(row);
-                    Comment commentWrapper = requireNonNull(tableRowsCommentsToRemove.get(row));
-                    CommentUtil.deleteCommentFromElements(commentWrapper, rowClone.getContent());
-                    var classFinder = new ClassFinder(P.class);
-                    TraversalUtil.visit(rowClone, classFinder);
-                    var objects = classFinder.results;
-                    for (Object object : objects) {
-                        P result = (P) object;
-                        StandardParagraph paragraph = StandardParagraph.from(source, result);
-                        placeholderReplacer.resolveExpressionsForParagraph(source, paragraph, expressionContext);
-                    }
-                    changes.add(rowClone);
+    public void repeat(@Nullable Iterable<Object> items) {
+        if (items == null) return;
+        var comment = context().comment();
+        var elements = comment.getElements();
+        var contextHolder = context().contextHolder();
+        var parent = comment.getParent();
+        var siblings = parent.getContent();
+        var firstElement = elements.getFirst();
+        var previousSectionBreak = previousSectionBreak(firstElement, parent).orElse(documentSection(context().part()));
+        var index = siblings.indexOf(firstElement);
+        siblings.removeAll(elements);
+        var iterator = items.iterator();
+        // Iterates items; copies elements; conditionally adds section break; adds elements
+        while (iterator.hasNext()) {
+            var item = iterator.next();
+            var copiedElements = elements.stream()
+                                         .map(XmlUtils::deepCopy)
+                                         .collect(toCollection(ArrayList::new));
+            WmlUtils.deleteCommentFromElements(comment.getId(), copiedElements);
+            // Adds section break to last paragraph if needed
+            if (iterator.hasNext() && containsSectionBreaks(copiedElements)) {
+                var lastParagraph = lastParagraph(copiedElements).orElseGet(newEndParagraph(copiedElements));
+                if (!hasSectionBreak(lastParagraph)) {
+                    addSectionBreak(previousSectionBreak, lastParagraph);
                 }
             }
-            content.addAll(index, changes);
+            siblings.addAll(index, copiedElements);
+            index += copiedElements.size();
+            copiedElements.forEach(element -> {if (element instanceof Child child) child.setParent(parent);});
+            var subContextKey = contextHolder.addBranch(item);
+            Hooks.ofHooks(() -> copiedElements)
+                 .forEachRemaining(hook -> hook.setContextKey(subContextKey));
         }
     }
 
-    /// {@inheritDoc}
-    @Override
-    public void reset() {
-        this.tableRowsToRepeat = new HashMap<>();
-        this.tableRowsCommentsToRemove = new HashMap<>();
+    private static Optional<SectPr> previousSectionBreak(Object firstObject, ContentAccessor parent) {
+        List<Object> parentContent = parent.getContent();
+        int pIndex = parentContent.indexOf(firstObject);
+
+        int i = pIndex - 1;
+        while (i >= 0) {
+            if (parentContent.get(i) instanceof P prevParagraph) {
+                // the first P preceding the object is the one carrying a section break
+                return ofNullable(prevParagraph.getPPr()).map(PPr::getSectPr);
+            }
+            else log.debug("The previous sibling was not a P, continuing search");
+            i--;
+        }
+        log.info("No previous section break found from : {}, first object index={}", parent, pIndex);
+        return Optional.empty();
     }
 
-    /// {@inheritDoc}
-    @Override
-    public void repeatTableRow(@Nullable Iterable<Object> objects) {
-        var tr = this.getParagraph()
-                     .parent(Tr.class)
-                     .orElseThrow(OfficeStamperException.throwing("This paragraph is not in a table row."));
-        tableRowsToRepeat.put(tr, objects);
-        tableRowsCommentsToRemove.put(tr, getCurrentCommentWrapper());
+    private static SectPr documentSection(DocxPart part) {
+        try {
+            return part.document()
+                       .getMainDocumentPart()
+                       .getContents()
+                       .getBody()
+                       .getSectPr();
+        } catch (Docx4JException e) {
+            throw new OfficeStamperException(e);
+        }
     }
 
+    private static boolean containsSectionBreaks(ArrayList<Object> elements) {
+        return elements.stream()
+                       .filter(P.class::isInstance)
+                       .map(P.class::cast)
+                       .map(P::getPPr)
+                       .filter(Objects::nonNull)
+                       .map(PPr::getSectPr)
+                       .anyMatch(Objects::nonNull);
+    }
+
+    private static Optional<P> lastParagraph(List<Object> elements) {
+        if (elements.getLast() instanceof P paragraph) return Optional.of(paragraph);
+        else return Optional.empty();
+    }
+
+    private static Supplier<P> newEndParagraph(ArrayList<Object> copiedElements) {
+        return () -> {
+            var p = WmlFactory.newParagraph();
+            copiedElements.addLast(p);
+            return p;
+        };
+    }
+
+    private static boolean hasSectionBreak(P lastParagraph) {
+        PPr pPr = lastParagraph.getPPr();
+        if (pPr == null) return false;
+        SectPr sectPr = pPr.getSectPr();
+        return sectPr != null;
+    }
+
+    private static void addSectionBreak(SectPr sectPr, P paragraph) {
+        PPr nextPPr = ofNullable(paragraph.getPPr()).orElseGet(WmlFactory::newPPr);
+        nextPPr.setSectPr(XmlUtils.deepCopy(sectPr));
+        paragraph.setPPr(nextPPr);
+    }
 }

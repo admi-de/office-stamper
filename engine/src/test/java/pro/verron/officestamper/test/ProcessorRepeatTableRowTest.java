@@ -1,5 +1,6 @@
 package pro.verron.officestamper.test;
 
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -7,8 +8,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pro.verron.officestamper.api.OfficeStamperConfiguration;
+import pro.verron.officestamper.test.utils.ContextFactory;
+import pro.verron.officestamper.test.utils.ObjectContextFactory;
 
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Queue;
@@ -17,11 +19,13 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.of;
-import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standard;
-import static pro.verron.officestamper.test.ContextFactory.mapContextFactory;
-import static pro.verron.officestamper.test.ContextFactory.objectContextFactory;
-import static pro.verron.officestamper.test.TestUtils.getResource;
-import static pro.verron.officestamper.test.TestUtils.makeResource;
+import static pro.verron.officestamper.preset.OfficeStamperConfigurations.full;
+import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
+import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
+import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
+import static pro.verron.officestamper.test.utils.DocxFactory.makeWordResource;
+import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
+import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 class ProcessorRepeatTableRowTest {
     private static final ObjectContextFactory FACTORY = new ObjectContextFactory();
@@ -41,7 +45,7 @@ class ProcessorRepeatTableRowTest {
 
     private static Arguments repeatingRows(ContextFactory factory) {
         return of("Repeating table rows should be possible",
-                standard(),
+                full(),
                 factory.roles("Homer Simpson",
                         "Dan Castellaneta",
                         "Marge Simpson",
@@ -54,10 +58,12 @@ class ProcessorRepeatTableRowTest {
                         "Hank Azaria",
                         "Krusty the Clown",
                         "Dan Castellaneta"),
-                getResource(Path.of("ProcessorRepeatTableRow.docx")),
+                getWordResource(Path.of("ProcessorRepeatTableRow.docx")),
                 """
                         Repeating Table Rows
+                        
                         List of Simpsons characters
+                        
                         |===
                         |Character name
                         |Voice Actor<cnfStyle=100000000000>
@@ -83,13 +89,15 @@ class ProcessorRepeatTableRowTest {
                         
                         |===
                         
+                        
                         There are 6 characters in the above table.
+                        
                         """);
     }
 
     private static Arguments repeatingRowsWithLineBreak(ContextFactory factory) {
         return of("Repeating table rows should be possible while replacing various linebreaks",
-                standard().setLineBreakPlaceholder("\n"),
+                full(),
                 factory.roles("Homer Simpson",
                         "Dan Castellaneta",
                         "Marge Simpson",
@@ -102,10 +110,12 @@ class ProcessorRepeatTableRowTest {
                         "Hank\n\nAzaria",
                         "Krusty the Clown",
                         "Dan\nCastellaneta"),
-                getResource(Path.of("ProcessorRepeatTableRow.docx")),
+                getWordResource(Path.of("ProcessorRepeatTableRow.docx")),
                 """
                         Repeating Table Rows
+                        
                         List of Simpsons characters
+                        
                         |===
                         |Character name
                         |Voice Actor<cnfStyle=100000000000>
@@ -140,15 +150,17 @@ class ProcessorRepeatTableRowTest {
                         
                         |===
                         
+                        
                         There are 6 characters in the above table.
+                        
                         """);
     }
 
     static Arguments repeatTableRowKeepsFormatTest(ContextFactory factory) {
         return of("Repeat Table row Integration test (keeps formatting)",
-                standard(),
+                full(),
                 factory.show(),
-                getResource(Path.of("ProcessorRepeatTableRow_KeepsFormatTest.docx")),
+                getWordResource(Path.of("ProcessorRepeatTableRow_KeepsFormatTest.docx")),
                 """
                         |===
                         |1❬st❘{vertAlign=superscript}❭ Homer Simpson-❬Dan Castellaneta❘{b=true}❭
@@ -164,6 +176,7 @@ class ProcessorRepeatTableRowTest {
                         
                         |===
                         
+                        
                         """);
     }
 
@@ -173,26 +186,29 @@ class ProcessorRepeatTableRowTest {
             String name,
             OfficeStamperConfiguration config,
             Object context,
-            InputStream template,
+            WordprocessingMLPackage template,
             String expected
     ) {
         log.info(name);
-        var stamper = new TestDocxStamper<>(config);
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var stamper = docxPackageStamper(config);
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
         assertEquals(expected, actual);
     }
 
     @Test
     void shouldAcceptList() {
-        var config = standard();
-        var stamper = new TestDocxStamper<>(config);
-        var template = makeResource("""
+        var config = full();
+        var stamper = docxPackageStamper(config);
+        var template = makeWordResource("""
+                comment::1[start="0,0", end="0,7", value="repeatTableRow(names)"]
                 |===
-                |<1|>${name}<|1><1|repeatTableRow(names)>
+                |${name}
                 |===
                 """);
         var context = FACTORY.names(List.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
         var expected = """
                 |===
                 |Homer
@@ -213,15 +229,17 @@ class ProcessorRepeatTableRowTest {
 
     @Test
     void shouldAcceptSet() {
-        var config = standard();
-        var stamper = new TestDocxStamper<>(config);
-        var template = makeResource("""
+        var config = full();
+        var stamper = docxPackageStamper(config);
+        var template = makeWordResource("""
+                comment::1[start="0,0", end="0,7", value="repeatTableRow(names)"]
                 |===
-                |<1|>${name}<|1><1|repeatTableRow(names)>
+                |${name}
                 |===
                 """);
         var context = FACTORY.names(Set.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var stamped = stamper.stamp(template, context);
+        var actual = docxToString(stamped);
         var expected = """
                 |===
                 |Marge
@@ -242,15 +260,18 @@ class ProcessorRepeatTableRowTest {
 
     @Test
     void shouldAcceptQueue() {
-        var config = standard();
-        var stamper = new TestDocxStamper<>(config);
-        var template = makeResource("""
+        var config = full();
+        var stamper = docxPackageStamper(config);
+        var template = makeWordResource("""
+                comment::1[start="0,0", end="0,7", value="repeatTableRow(names)"]
                 |===
-                |<1|>${name}<|1><1|repeatTableRow(names)>
+                |${name}
+                
                 |===
                 """);
         var context = FACTORY.names(Queue.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var stamped = stamper.stamp(template, context);
+        var actual = docxToString(stamped);
         var expected = """
                 |===
                 |Homer
@@ -268,5 +289,4 @@ class ProcessorRepeatTableRowTest {
                 """;
         assertEquals(expected, actual);
     }
-
 }

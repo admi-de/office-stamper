@@ -4,14 +4,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import pro.verron.officestamper.preset.OfficeStamperConfigurations;
+import pro.verron.officestamper.test.utils.ContextFactory;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static pro.verron.officestamper.test.ContextFactory.mapContextFactory;
-import static pro.verron.officestamper.test.ContextFactory.objectContextFactory;
-import static pro.verron.officestamper.test.TestUtils.getResource;
+import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
+import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
+import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
+import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
+import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 /// @author Joseph Verron
 class MultiSectionTest {
@@ -24,17 +27,22 @@ class MultiSectionTest {
     @ParameterizedTest
     void expressionsInMultipleSections(ContextFactory factory) {
         var context = factory.sectionName("Homer", "Marge");
-        var template = getResource("MultiSectionTest.docx");
+        var template = getWordResource("MultiSectionTest.docx");
         var configuration = OfficeStamperConfigurations.standard();
-        var stamper = new TestDocxStamper<>(configuration);
-        var actual = stamper.stampAndLoadAndExtract(template, context);
+        var stamper = docxPackageStamper(configuration);
+        var wordprocessingMLPackage = stamper.stamp(template, context);
+        var actual = docxToString(wordprocessingMLPackage);
         String expected = """
                 Homer
                 
                 
+                
+                
                 [section-break, {docGrid={linePitch=360},pgMar={bottom=1417,footer=708,gutter=0,header=708,left=1417,right=1417,top=1417},pgSz={h=16838,w=11906}}]
                 <<<
+                
                 Marge
+                
                 """;
         assertEquals(expected, actual);
     }

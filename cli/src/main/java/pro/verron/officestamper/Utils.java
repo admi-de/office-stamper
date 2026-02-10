@@ -9,13 +9,12 @@ import java.util.logging.Logger;
 
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
+/// Utility class for the CLI.
 public class Utils {
 
-    private Utils() {
-        throw new OfficeStamperException("Utility class");
-    }
-
+    /// Logging format property key.
     public static final String LOGGING_FORMAT_KEY = "java.util.logging.SimpleFormatter.format";
+    /// Logging format property value.
     public static final String LOGGING_FORMAT_VAL = "[%1$tl:%1$tM:%1$tS] %2$s %4$-7s: %5$s %6$s %n";
 
     static {
@@ -25,6 +24,13 @@ public class Utils {
               .setLevel(Level.SEVERE);
     }
 
+    private Utils() {
+        throw new OfficeStamperException("Utility class");
+    }
+
+    /// Returns a logger for the caller class.
+    ///
+    /// @return a logger
     public static Logger getLogger() {
         var callerName = StackWalker
                 .getInstance(RETAIN_CLASS_REFERENCE)

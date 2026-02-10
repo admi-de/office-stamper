@@ -1,23 +1,24 @@
 package pro.verron.officestamper.core;
 
-import org.docx4j.XmlUtils;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.docx4j.openpackaging.exceptions.InvalidFormatException;
+import org.docx4j.openpackaging.packages.OpcPackage;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.PartName;
 import org.docx4j.openpackaging.parts.Parts;
 import org.docx4j.openpackaging.parts.WordprocessingML.CommentsPart;
 import org.docx4j.wml.*;
+import org.docx4j.wml.R.CommentReference;
 import pro.verron.officestamper.api.Comment;
+import pro.verron.officestamper.api.DocxPart;
 import pro.verron.officestamper.api.OfficeStamperException;
+import pro.verron.officestamper.utils.wml.DocxIterator;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static org.docx4j.XmlUtils.unwrap;
-import static pro.verron.officestamper.utils.WmlFactory.newBody;
-import static pro.verron.officestamper.utils.WmlFactory.newComments;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 /// Utility class for working with comments in a DOCX document.
 ///
@@ -40,51 +41,25 @@ public class CommentUtil {
         throw new OfficeStamperException("Utility class shouldn't be instantiated");
     }
 
-    /// Retrieves the comment associated with or around the specified `R` run within a WordprocessingMLPackage document.
+    /// Retrieves the comment associated with a given paragraph content within a WordprocessingMLPackage document.
     ///
-    /// @param run      the run to search for an associated comment
-    /// @param document the WordprocessingMLPackage document containing the run and its possible comments
-    ///
-    /// @return an Optional containing the found comment, or Optional.empty() if no comment is associated
-    public static Optional<Comments.Comment> getCommentAround(R run, WordprocessingMLPackage document) {
-        ContentAccessor parent = (ContentAccessor) run.getParent();
-        if (parent == null) return Optional.empty();
-        return getComment(run, document, parent);
-    }
+    /// @param contentAccessor the content accessor to search for comments.
+    /// @param document        the WordprocessingMLPackage document containing the paragraph and its comments.
+    /// @return a collection of found comments.
+    public static Collection<Comments.Comment> getCommentFor(ContentAccessor contentAccessor, OpcPackage document) {
+        var comments = getCommentsPart(document.getParts()).map(CommentUtil::extractContent)
+                                                           .map(Comments::getComment)
+                                                           .stream()
+                                                           .flatMap(Collection::stream)
+                                                           .toList();
 
-    private static Optional<Comments.Comment> getComment(
-            R run,
-            WordprocessingMLPackage document,
-            ContentAccessor parent
-    ) {
-        CommentRangeStart possibleComment = null;
-        boolean foundChild = false;
-        for (Object contentElement : parent.getContent()) {
-            // so first we look for the start of the comment
-            if (unwrap(contentElement) instanceof CommentRangeStart crs) possibleComment = crs;
-                // then we check if the child we are looking for is ours
-            else if (possibleComment != null && run.equals(contentElement)) foundChild = true;
-                // and then, if we have an end of a comment, we are good!
-            else if (possibleComment != null && foundChild && unwrap(contentElement) instanceof CommentRangeEnd) {
-                return findComment(document, possibleComment.getId());
-            }
-            // else restart
-            else {
-                possibleComment = null;
-                foundChild = false;
-            }
+        var result = new ArrayList<Comments.Comment>();
+        var commentIterator = new DocxIterator(contentAccessor).selectClass(CommentRangeStart.class);
+        while (commentIterator.hasNext()) {
+            var crs = commentIterator.next();
+            findCommentById(comments, crs.getId()).ifPresent(result::add);
         }
-        return Optional.empty();
-    }
-
-    private static Optional<Comments.Comment> findComment(WordprocessingMLPackage document, BigInteger id) {
-        return getCommentsPart(document.getParts()).map(CommentUtil::extractContent)
-                                                   .map(Comments::getComment)
-                                                   .stream()
-                                                   .flatMap(Collection::stream)
-                                                   .filter(comment -> id.equals(comment.getId()))
-                                                   .findFirst();
-
+        return result;
     }
 
     /// Retrieves the CommentsPart from the given Parts object.
@@ -111,31 +86,6 @@ public class CommentUtil {
         }
     }
 
-    /// Retrieves the comment associated with a given paragraph content within a WordprocessingMLPackage document.
-    ///
-    /// @param paragraphContent the content of the paragraph to search for a comment.
-    /// @param document         the WordprocessingMLPackage document containing the paragraph and its comments.
-    ///
-    /// @return an Optional containing the found comment, or Optional.empty() if no comment is associated with the given
-    /// paragraph content.
-    public static Collection<Comments.Comment> getCommentFor(
-            List<Object> paragraphContent,
-            WordprocessingMLPackage document
-    ) {
-        var comments = getCommentsPart(document.getParts()).map(CommentUtil::extractContent)
-                                                           .map(Comments::getComment)
-                                                           .stream()
-                                                           .flatMap(Collection::stream)
-                                                           .toList();
-
-        return paragraphContent.stream()
-                               .filter(CommentRangeStart.class::isInstance)
-                               .map(CommentRangeStart.class::cast)
-                               .map(CommentRangeStart::getId)
-                               .flatMap(commentId -> findCommentById(comments, commentId).stream())
-                               .toList();
-    }
-
     private static Optional<Comments.Comment> findCommentById(List<Comments.Comment> comments, BigInteger id) {
         for (Comments.Comment comment : comments) {
             if (id.equals(comment.getId())) {
@@ -150,18 +100,18 @@ public class CommentUtil {
     /// @param comment a [Comment] object
     public static void deleteComment(Comment comment) {
         CommentRangeEnd end = comment.getCommentRangeEnd();
-        if (end != null) {
-            ContentAccessor endParent = (ContentAccessor) end.getParent();
-            endParent.getContent()
-                     .remove(end);
-        }
+        ContentAccessor endParent = (ContentAccessor) end.getParent();
+        endParent.getContent()
+                 .remove(end);
         CommentRangeStart start = comment.getCommentRangeStart();
-        if (start != null) {
-            ContentAccessor startParent = (ContentAccessor) start.getParent();
-            startParent.getContent()
-                       .remove(start);
-        }
-        R.CommentReference reference = comment.getCommentReference();
+        var parent = start.getParent();
+        ContentAccessor startParent = (ContentAccessor) parent;
+        startParent.getContent()
+                   .remove(start);
+        if (startParent instanceof CTSmartTagRun tag && tag.getContent()
+                                                           .isEmpty()) ((ContentAccessor) tag.getParent()).getContent()
+                                                                                                          .remove(tag);
+        CommentReference reference = comment.getCommentReference();
         if (reference != null) {
             ContentAccessor referenceParent = (ContentAccessor) reference.getParent();
             referenceParent.getContent()
@@ -169,90 +119,50 @@ public class CommentUtil {
         }
     }
 
-    private static List<DeletableItems> findDeletableItemsForComment(List<Object> items, BigInteger commentId) {
-        List<DeletableItems> elementsToRemove = new ArrayList<>();
-        for (Object item : items) {
-            Object unwrapped = unwrap(item);
-            if (unwrapped instanceof CommentRangeStart crs && Objects.equals(commentId, crs.getId()))
-                elementsToRemove.add(new DeletableItems(items, List.of(item)));
-            else if (unwrapped instanceof CommentRangeEnd cre && Objects.equals(commentId, cre.getId()))
-                elementsToRemove.add(new DeletableItems(items, List.of(item)));
-            else if (unwrapped instanceof R.CommentReference rcr && Objects.equals(commentId, rcr.getId()))
-                elementsToRemove.add(new DeletableItems(items, List.of(item)));
-            else if (unwrapped instanceof ContentAccessor ca)
-                elementsToRemove.addAll(findDeletableItemsForComment(ca.getContent(), commentId));
-            else if (unwrapped instanceof SdtRun sdtRun)
-                elementsToRemove.addAll(findDeletableItemsForComment(sdtRun.getSdtContent()
-                                                                           .getContent(), commentId));
-        }
-        return elementsToRemove;
-    }
-
-    /// Deletes all elements associated with the specified comment from the provided list of items.
+    /// Creates a [Comment] object.
     ///
-    /// @param comment the comment whose associated elements should be removed
-    /// @param items   the list of items from which elements associated with the comment will be deleted
-    public static void deleteCommentFromElements(Comment comment, List<Object> items) {
-        var docx4jComment = comment.getComment();
-        var commentId = docx4jComment.getId();
-        findDeletableItemsForComment(items, commentId).forEach(p -> p.container.removeAll(p.items));
-    }
-
-    /// Creates a sub Word document
-    /// by extracting a specified comment and its associated content from the original document.
+    /// @param docxPart the document part.
+    /// @param crs the comment range start.
+    /// @param document the document.
+    /// @param contentAccessor the content accessor.
     ///
-    /// @param comment The comment to be extracted from the original document.
-    ///
-    /// @return The sub Word document containing the content of the specified comment.
-    public static WordprocessingMLPackage createSubWordDocument(Comment comment) {
-        var elements = comment.getElements();
-
-        var target = createWordPackageWithCommentsPart();
-
-        // copy the elements without comment range anchors
-        var finalElements = elements.stream()
-                                    .map(XmlUtils::deepCopy)
-                                    .collect(Collectors.toCollection(ArrayList::new));
-        deleteCommentFromElements(comment, finalElements);
-        target.getMainDocumentPart()
-              .getContent()
-              .addAll(finalElements);
-
-        // copy the images from parent document using the original repeat elements
-        var fakeBody = newBody(elements);
-        DocumentUtil.walkObjectsAndImportImages(fakeBody, comment.getDocument(), target);
-
-        var comments = extractComments(comment.getChildren());
-        target.getMainDocumentPart()
-              .getCommentsPart()
-              .setContents(comments);
-        return target;
-    }
-
-    private static WordprocessingMLPackage createWordPackageWithCommentsPart() {
-        try {
-            CommentsPart targetCommentsPart = new CommentsPart();
-            var target = WordprocessingMLPackage.createPackage();
-            var mainDocumentPart = target.getMainDocumentPart();
-            mainDocumentPart.addTargetPart(targetCommentsPart);
-            return target;
-        } catch (InvalidFormatException e) {
-            throw new OfficeStamperException("Failed to create a Word package with comment Part", e);
-        }
-    }
-
-    private static Comments extractComments(Set<Comment> commentChildren) {
-        var list = new ArrayList<Comments.Comment>();
-        var queue = new ArrayDeque<>(commentChildren);
-        while (!queue.isEmpty()) {
-            var comment = queue.remove();
-            list.add(comment.getComment());
-            if (comment.getChildren() != null) {
-                queue.addAll(comment.getChildren());
+    /// @return the comment.
+    public static Comment comment(
+            DocxPart docxPart,
+            CommentRangeStart crs,
+            WordprocessingMLPackage document,
+            ContentAccessor contentAccessor
+    ) {
+        var iterator = new DocxIterator(contentAccessor).slice(crs, null);
+        CommentRangeEnd cre = null;
+        CommentReference cr = null;
+        var commentId = crs.getId();
+        while (iterator.hasNext() && (cr == null || cre == null)) {
+            var element = iterator.next();
+            if (element instanceof CommentRangeEnd found && cre == null && Objects.equals(found.getId(), commentId)) {
+                cre = found;
+            }
+            else if (element instanceof CommentReference found && cr == null && Objects.equals(found.getId(),
+                    commentId)) {
+                cr = found;
             }
         }
-        return newComments(list);
+
+        if (cre == null)
+            throw new IllegalStateException("Could not find comment range end or reference");
+
+        var comment = comment(document, commentId);
+
+
+        return new StandardComment(docxPart, (CTSmartTagRun) crs.getParent(), crs, cre, comment, cr);
     }
 
-    private record DeletableItems(List<Object> container, List<Object> items) {}
+    private static Comments.Comment comment(WordprocessingMLPackage document, BigInteger commentId) {
+        return getCommentsPart(document.getParts()).map(CommentUtil::extractContent)
+                                                   .map(Comments::getComment)
+                                                   .stream()
+                                                   .flatMap(Collection::stream)
+                                                   .collect(toMap(Comments.Comment::getId, identity()))
+                                                   .get(commentId);
+    }
 }

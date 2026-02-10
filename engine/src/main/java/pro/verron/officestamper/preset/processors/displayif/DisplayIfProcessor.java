@@ -1,16 +1,14 @@
 package pro.verron.officestamper.preset.processors.displayif;
 
-import org.docx4j.wml.ContentAccessor;
-import org.docx4j.wml.Tbl;
-import org.docx4j.wml.Tr;
+
+import org.jspecify.annotations.Nullable;
 import org.jvnet.jaxb2_commons.ppp.Child;
-import org.springframework.lang.Nullable;
-import pro.verron.officestamper.api.*;
+import pro.verron.officestamper.api.CommentProcessor;
+import pro.verron.officestamper.api.ProcessorContext;
 import pro.verron.officestamper.preset.CommentProcessorFactory;
-import pro.verron.officestamper.utils.WmlUtils;
+import pro.verron.officestamper.utils.wml.WmlUtils;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static pro.verron.officestamper.api.OfficeStamperException.throwing;
 
@@ -21,36 +19,15 @@ import static pro.verron.officestamper.api.OfficeStamperException.throwing;
 /// @version ${version}
 /// @since 1.0.0
 public class DisplayIfProcessor
-        extends AbstractCommentProcessor
+        extends CommentProcessor
         implements CommentProcessorFactory.IDisplayIfProcessor {
 
-    private List<Paragraph> paragraphsToBeRemoved = new ArrayList<>();
-    private List<Child> elementsToBeRemoved = new ArrayList<>();
 
-    private DisplayIfProcessor(ParagraphPlaceholderReplacer placeholderReplacer) {
-        super(placeholderReplacer);
-    }
-
-    /// Creates a new DisplayIfProcessor instance.
+    /// Creates a new [DisplayIfProcessor].
     ///
-    /// @param pr the [ParagraphPlaceholderReplacer] used for replacing expressions.
-    ///
-    /// @return a new DisplayIfProcessor instance.
-    public static CommentProcessor newInstance(ParagraphPlaceholderReplacer pr) {
-        return new DisplayIfProcessor(pr);
-    }
-
-    @Override
-    public void commitChanges(DocxPart source) {
-        paragraphsToBeRemoved.forEach(Paragraph::remove);
-        elementsToBeRemoved.forEach(WmlUtils::remove);
-    }
-
-
-    @Override
-    public void reset() {
-        paragraphsToBeRemoved = new ArrayList<>();
-        elementsToBeRemoved = new ArrayList<>();
+    /// @param processorContext the context in which this processor runs
+    public DisplayIfProcessor(ProcessorContext processorContext) {
+        super(processorContext);
     }
 
     @Override
@@ -61,7 +38,8 @@ public class DisplayIfProcessor
     @Override
     public void displayParagraphIf(@Nullable Boolean condition) {
         if (Boolean.TRUE.equals(condition)) return;
-        paragraphsToBeRemoved.add(this.getParagraph());
+        context().paragraph()
+                 .remove();
     }
 
     @Override
@@ -69,14 +47,12 @@ public class DisplayIfProcessor
         displayParagraphIf(condition != null);
     }
 
-
     @Override
     public void displayTableRowIf(@Nullable Boolean condition) {
         if (Boolean.TRUE.equals(condition)) return;
-        var tr = this.getParagraph()
-                     .parent(Tr.class)
-                     .orElseThrow(throwing("Paragraph is not within a row!"));
-        elementsToBeRemoved.add(tr);
+        context().tableRow()
+                 .orElseThrow(throwing("Paragraph is not within a row!"))
+                 .remove();
     }
 
     @Override
@@ -90,12 +66,11 @@ public class DisplayIfProcessor
     }
 
     @Override
-    public void displayTableIf(Boolean condition) {
+    public void displayTableIf(@Nullable Boolean condition) {
         if (Boolean.TRUE.equals(condition)) return;
-        var tbl = this.getParagraph()
-                      .parent(Tbl.class)
-                      .orElseThrow(throwing("Paragraph is not within a table!"));
-        elementsToBeRemoved.add(tbl);
+        context().table()
+                 .orElseThrow(throwing("Paragraph is not within a table!"))
+                 .remove();
     }
 
     @Override
@@ -111,20 +86,13 @@ public class DisplayIfProcessor
     @Override
     public void displayWordsIf(@Nullable Boolean condition) {
         if (Boolean.TRUE.equals(condition)) return;
-        var commentWrapper = getCurrentCommentWrapper();
-        var start = commentWrapper.getCommentRangeStart();
-        var end = commentWrapper.getCommentRangeEnd();
-        var parent = (ContentAccessor) start.getParent();
-        var startIndex = parent.getContent()
-                               .indexOf(start);
-        var iterator = parent.getContent()
-                             .listIterator(startIndex);
+        var iterator = context().contentIterator();
+        var toRemove = new ArrayList<Child>();
         while (iterator.hasNext()) {
             var it = iterator.next();
-            elementsToBeRemoved.add((Child) it);
-            if (it.equals(end))
-                break;
+            toRemove.add((Child) it);
         }
+        toRemove.forEach(WmlUtils::remove);
     }
 
     @Override
@@ -140,10 +108,9 @@ public class DisplayIfProcessor
     @Override
     public void displayDocPartIf(@Nullable Boolean condition) {
         if (Boolean.TRUE.equals(condition)) return;
-        var commentWrapper = getCurrentCommentWrapper();
-        commentWrapper.getParent()
-                      .getContent()
-                      .removeAll(commentWrapper.getElements());
+        comment().getParent()
+                 .getContent()
+                 .removeAll(comment().getElements());
     }
 
     @Override

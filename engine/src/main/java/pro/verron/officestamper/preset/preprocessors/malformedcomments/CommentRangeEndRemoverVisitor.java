@@ -16,16 +16,17 @@ class CommentRangeEndRemoverVisitor
     private final List<BigInteger> ids;
     private final Map<Object, List<Object>> toRemove = new HashMap<>();
 
-    public CommentRangeEndRemoverVisitor(List<BigInteger> ids) {
+    CommentRangeEndRemoverVisitor(List<BigInteger> ids) {
         this.ids = ids;
     }
 
-    @Override public void apply(CommentRangeEnd element, Object parent, List<Object> siblings) {
+    @Override
+    public void apply(CommentRangeEnd element, Object parent, List<Object> siblings) {
         if (ids.contains(element.getId())) toRemove.put(element, siblings);
     }
 
-    public void run() {
-        log.debug("Removed Comment Range Ends: {}", toRemove);
+    void run() {
+        if (!toRemove.isEmpty()) log.debug("Removed Comment Range Ends: {}", toRemove);
         toRemove.forEach((object, siblings) -> siblings.remove(object));
     }
 }

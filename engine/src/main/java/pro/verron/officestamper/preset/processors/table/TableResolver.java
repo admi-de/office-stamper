@@ -2,23 +2,18 @@ package pro.verron.officestamper.preset.processors.table;
 
 import jakarta.xml.bind.JAXBElement;
 import org.docx4j.XmlUtils;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.wml.ContentAccessor;
 import org.docx4j.wml.Tbl;
 import org.docx4j.wml.Tc;
 import org.docx4j.wml.Tr;
-import org.springframework.lang.Nullable;
-import pro.verron.officestamper.api.*;
-import pro.verron.officestamper.core.PlaceholderReplacer;
+import org.jspecify.annotations.Nullable;
+import pro.verron.officestamper.api.CommentProcessor;
+import pro.verron.officestamper.api.ProcessorContext;
 import pro.verron.officestamper.preset.CommentProcessorFactory;
 import pro.verron.officestamper.preset.StampTable;
-import pro.verron.officestamper.utils.WmlFactory;
+import pro.verron.officestamper.utils.wml.WmlFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 import static pro.verron.officestamper.api.OfficeStamperException.throwing;
 
@@ -28,61 +23,27 @@ import static pro.verron.officestamper.api.OfficeStamperException.throwing;
 /// @version ${version}
 /// @since 1.6.2
 public class TableResolver
-        extends AbstractCommentProcessor
+        extends CommentProcessor
         implements CommentProcessorFactory.ITableResolver {
-    private final Map<Tbl, StampTable> cols = new HashMap<>();
-    private final Function<Tbl, List<Object>> nullSupplier;
 
-    private TableResolver(
-            ParagraphPlaceholderReplacer placeholderReplacer, Function<Tbl, List<Object>> nullSupplier
-    ) {
-        super(placeholderReplacer);
-        this.nullSupplier = nullSupplier;
-    }
-
-    /// Generate a new [TableResolver] instance where value is replaced by an empty list when <code>null</code>
+    /// Constructs a new TableResolver with the given processor context.
     ///
-    /// @param pr a [PlaceholderReplacer] instance
-    ///
-    /// @return a new [TableResolver] instance
-    public static CommentProcessor newInstance(ParagraphPlaceholderReplacer pr) {
-        return new TableResolver(pr, table -> Collections.emptyList());
+    /// @param processorContext the context in which this processor operates
+    public TableResolver(ProcessorContext processorContext) {
+        super(processorContext);
     }
 
-    /// {@inheritDoc}
-    @Override public void resolveTable(@Nullable StampTable givenTable) {
-        var tbl = this.getParagraph()
-                      .parent(Tbl.class)
-                      .orElseThrow(throwing("Paragraph is not within a table!"));
-        cols.put(tbl, givenTable);
-    }
-
-    /// {@inheritDoc}
-    @Override public void commitChanges(DocxPart document) {
-        for (Map.Entry<Tbl, StampTable> entry : cols.entrySet()) {
-            Tbl wordTable = entry.getKey();
-
-            StampTable stampedTable = entry.getValue();
-
-            if (stampedTable != null) {
-                replaceTableInplace(wordTable, stampedTable);
-            }
-            else {
-                List<Object> tableParentContent = ((ContentAccessor) wordTable.getParent()).getContent();
-                int tablePosition = tableParentContent.indexOf(wordTable);
-                List<Object> toInsert = nullSupplier.apply(wordTable);
-                tableParentContent.set(tablePosition, toInsert);
-            }
+    @Override
+    public void resolveTable(@Nullable StampTable givenTable) {
+        var tbl = paragraph().parent(Tbl.class)
+                             .orElseThrow(throwing("Paragraph is not within a table!"));
+        if (givenTable != null) {
+            replaceTableInplace(tbl, givenTable);
         }
-    }
-
-    @Override public void commitChanges(WordprocessingMLPackage document) {
-        throw new OfficeStamperException("Should not be called, since deprecation");
-    }
-
-    /// {@inheritDoc}
-    @Override public void reset() {
-        cols.clear();
+        else {
+            List<Object> tableParentContent = ((ContentAccessor) tbl.getParent()).getContent();
+            tableParentContent.remove(tbl);
+        }
     }
 
     private void replaceTableInplace(Tbl wordTable, StampTable stampedTable) {

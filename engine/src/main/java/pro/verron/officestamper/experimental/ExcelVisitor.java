@@ -11,9 +11,9 @@ import org.docx4j.openpackaging.parts.SpreadsheetML.Styles;
 import org.docx4j.openpackaging.parts.SpreadsheetML.WorkbookPart;
 import org.docx4j.openpackaging.parts.SpreadsheetML.WorksheetPart;
 import org.docx4j.openpackaging.parts.ThemePart;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.Nullable;
 import org.xlsx4j.sml.*;
 import pro.verron.officestamper.api.OfficeStamperException;
 
@@ -31,7 +31,7 @@ abstract class ExcelVisitor {
 
     private static final Logger logger = LoggerFactory.getLogger(ExcelVisitor.class);
 
-    private static void unexpectedVisit(Object object) {
+    private static void unexpectedVisit(@Nullable Object object) {
         assert object != null : "Cannot visit a null object";
         var env = System.getenv();
         var throwOnUnexpectedVisit = Boolean.parseBoolean(env.getOrDefault("throw-on-unexpected-visit", "false"));
