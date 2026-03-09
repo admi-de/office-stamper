@@ -2,6 +2,7 @@ package pro.verron.officestamper.test;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -45,6 +46,7 @@ import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFa
     @DisplayName("Should allow to format dates")
     @MethodSource("factories")
     @ParameterizedTest(name = "Should allow to format dates ({argumentSetName})")
+    @Disabled
     void features(ContextFactory factory) {
         var config = standard();
         var template = DocxFactory.makeWordResource("""

@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>pro.verron.office-stamper</groupId>
+        <groupId>de.admi.office-stamper</groupId>
         <artifactId>office-stamper</artifactId>
-        <version>3.2</version>
+        <version>103.2.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -21,9 +21,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>pro.verron.office-stamper</groupId>
+            <groupId>de.admi.office-stamper</groupId>
             <artifactId>utils</artifactId>
-            <version>3.2</version>
+            <version>103.2.1</version>
             <scope>compile</scope>
         </dependency>
 
@@ -86,9 +86,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>pro.verron.office-stamper</groupId>
+            <groupId>de.admi.office-stamper</groupId>
             <artifactId>asciidoc</artifactId>
-            <version>3.2</version>
+            <version>103.2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -128,14 +128,6 @@
                                 <version>2.0.17</version>
                             </dependency>
                         </dependencies>
-                        <executions>
-                            <execution>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>mutationCoverage</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>

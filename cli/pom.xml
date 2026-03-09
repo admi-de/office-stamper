@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>pro.verron.office-stamper</groupId>
+        <groupId>de.admi.office-stamper</groupId>
         <artifactId>office-stamper</artifactId>
-        <version>3.2</version>
+        <version>103.2.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -20,7 +20,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>pro.verron.office-stamper</groupId>
+            <groupId>de.admi.office-stamper</groupId>
             <artifactId>engine</artifactId>
             <version>${project.version}</version>
         </dependency>

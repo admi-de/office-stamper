@@ -82,12 +82,12 @@ public final class AsciiDocToFx {
         for (Block block : model.getBlocks()) {
             TextFlow flow = new TextFlow();
             switch (block) {
-                case Heading(_, int level, List<Inline> inlines) -> {
+                case Heading(List<String> header, int level, List<Inline> inlines) -> {
                     for (Inline inline : inlines) {
                         emitInline(flow, inline, fontForHeading(level), FontWeight.NORMAL, FontPosture.REGULAR);
                     }
                 }
-                case Paragraph(_, List<Inline> inlines) -> {
+                case Paragraph(List<String> header, List<Inline> inlines) -> {
                     for (Inline inline : inlines) {
                         emitInline(flow, inline, Font.getDefault(), FontWeight.NORMAL, FontPosture.REGULAR);
                     }

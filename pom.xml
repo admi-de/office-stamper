@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Office-stamper</name>
-    <groupId>pro.verron.office-stamper</groupId>
+    <groupId>de.admi.office-stamper</groupId>
     <artifactId>office-stamper</artifactId>
-    <version>3.2</version>
+    <version>103.2.1</version>
     <description>
         Office-stamper is a Java library for stamping DOCX templates with data.
         It allows you to create professional documents by merging data with pre-designed templates,
@@ -37,11 +37,11 @@
 
     <properties>
         <docx4j.version>11.5.11</docx4j.version>
-        <javafx.version>27-ea+6</javafx.version>
+        <javafx.version>21</javafx.version>
 
-        <maven.compiler.release>25</maven.compiler.release>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.report.outputEncoding>UTF-8</project.report.outputEncoding>
     </properties>
@@ -114,17 +114,6 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.10.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <publishingServerId>central</publishingServerId>
-                    <autoPublish>true</autoPublish>
-                    <waitUntil>published</waitUntil>
-                </configuration>
             </plugin>
         </plugins>
         <pluginManagement>
@@ -219,23 +208,20 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.sonatype.central</groupId>
-                    <artifactId>central-publishing-maven-plugin</artifactId>
-                    <version>0.10.0</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <publishingServerId>central</publishingServerId>
-                        <autoPublish>true</autoPublish>
-                        <waitUntil>published</waitUntil>
-                    </configuration>
-                </plugin>
-                <plugin>
                     <groupId>org.pitest</groupId>
                     <artifactId>pitest-maven</artifactId>
                     <version>1.22.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <extensions>
+            <extension>
+                <groupId>com.google.cloud.artifactregistry</groupId>
+                <artifactId>artifactregistry-maven-wagon</artifactId>
+                <version>2.2.0</version>
+            </extension>
+        </extensions>
     </build>
 
     <dependencyManagement>
@@ -372,6 +358,14 @@
             <name>Office-stamper Documentation</name>
             <url>https://verronpro.github.io/office-stamper/</url>
         </site>
+        <snapshotRepository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/public-java-packages</url>
+        </snapshotRepository>
+        <repository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west3-maven.pkg.dev/pv-analysis-nrw/public-java-packages</url>
+        </repository>
     </distributionManagement>
 
     <developers>

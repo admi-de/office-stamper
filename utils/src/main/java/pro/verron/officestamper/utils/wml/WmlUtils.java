@@ -217,29 +217,34 @@ public final class WmlUtils {
                                                              .getLocalPart()
                                                              .equals("instrText") -> asString(jaxbElement.getValue());
             case Text text -> asString(text);
-            case R.Tab _ -> "\t";
-            case R.Cr _ -> "\n";
+            case R.Tab r -> "\t";
+            case R.Cr cr -> "\n";
             case Br br when br.getType() == null -> "\n";
             case Br br when br.getType() == STBrType.PAGE -> "\n";
             case Br br when br.getType() == STBrType.COLUMN -> "\n";
             case Br br when br.getType() == STBrType.TEXT_WRAPPING -> "\n";
 
-            case R.NoBreakHyphen _ -> "‑";
-            case R.SoftHyphen _ -> "\u00AD";
-            case R.LastRenderedPageBreak _, R.AnnotationRef _, R.CommentReference _, Drawing _ -> "";
-            case FldChar _ -> "<fldchar>";
+            case R.NoBreakHyphen nbh -> "‑";
+            case R.SoftHyphen sh -> "\u00AD";
+            case R.LastRenderedPageBreak lrpb -> "";
+            case R.AnnotationRef ar -> "";
+            case R.CommentReference cr -> "";
+            case Drawing d -> "";
+            case FldChar fc -> "<fldchar>";
             case CTFtnEdnRef ref -> "<ref(%s)>".formatted(ref.getId());
             case R.Sym sym -> "<sym(%s, %s)>".formatted(sym.getFont(), sym.getChar());
             case List<?> list -> list.stream()
                                      .map(WmlUtils::asString)
                                      .collect(joining());
-            case ProofErr _, CTShadow _ -> "";
+            case ProofErr pe -> "";
+            case CTShadow ct -> "";
             case SdtRun sdtRun -> asString(sdtRun.getSdtContent());
             case ContentAccessor contentAccessor -> asString(contentAccessor.getContent());
             case Pict pict -> asString(pict.getAnyAndAny());
             case VmlShapeElements vmlShapeElements -> asString(vmlShapeElements.getEGShapeElements());
             case CTTextbox textbox -> asString(textbox.getTxbxContent());
-            case CommentRangeStart _, CommentRangeEnd _ -> "";
+            case CommentRangeStart crs -> "";
+            case CommentRangeEnd cre -> "";
             default -> {
                 log.debug("Unhandled object type: {}", content.getClass());
                 yield "";
