@@ -144,7 +144,7 @@ public final class DocxToAsciiDoc
             Object val = unwrap(o);
             switch (val) {
                 case R r -> inlines.addAll(getInlines(r, breakRecorder));
-                case ProofErr _ -> {/* NOOP */}
+                case ProofErr pe -> {/* NOOP */}
                 case CommentRangeStart crs -> commentRecorder.open(crs.getId(), blocks.size(), 0);
                 case CommentRangeEnd cre -> commentRecorder.close(cre.getId(), blocks.size(), 0);
                 case SdtRun sdtRun -> {
@@ -209,7 +209,7 @@ public final class DocxToAsciiDoc
                 case Br br when br.getType() == STBrType.TEXT_WRAPPING -> sb.append(" +\n");
                 case Br br when br.getType() == STBrType.COLUMN -> brecorder.set();
                 case Br br when br.getType() == STBrType.PAGE -> brecorder.set();
-                case R.Tab _ -> sb.append("\t");
+                case R.Tab t -> sb.append("\t");
                 case CTFtnEdnRef n -> sb.append("footnote:%s[]".formatted(n.getId()));
                 case CommentRangeStart crs -> commentRecorder.open(crs.getId(), blocks.size(), inlines.size());
                 case CommentRangeEnd cre -> commentRecorder.close(cre.getId(), blocks.size(), inlines.size());
@@ -280,7 +280,7 @@ public final class DocxToAsciiDoc
                               .map(u -> DocxToAsciiDoc.styledwrapper("u_" + u.value()))
                               .ifPresent(wrappers::add);
 
-        ofNullable(rPr.getStrike()).map(_ -> DocxToAsciiDoc.styledwrapper("strike"))
+        ofNullable(rPr.getStrike()).map(v -> DocxToAsciiDoc.styledwrapper("strike"))
                                    .ifPresent(wrappers::add);
 
         ofNullable(rPr.getHighlight()).map(h -> DocxToAsciiDoc.styledwrapper("highlight_" + h.getVal()))

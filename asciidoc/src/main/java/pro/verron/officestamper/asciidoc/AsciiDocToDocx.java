@@ -94,9 +94,9 @@ public final class AsciiDocToDocx
             case Blockquote b -> content.add(createBlockquote(factory, b));
             case CodeBlock cb -> content.add(createCodeBlock(factory, cb));
             case ImageBlock ib -> content.add(createImageBlock(factory, ib));
-            case Break _ -> throw new java.lang.UnsupportedOperationException("Breaks are not supported");
-            case CommentLine _ -> throw new UnsupportedOperationException("Comments are not supported");
-            case OpenBlock _ -> throw new UnsupportedOperationException("Open blocks are not supported");
+            case Break b -> throw new java.lang.UnsupportedOperationException("Breaks are not supported");
+            case CommentLine cl -> throw new UnsupportedOperationException("Comments are not supported");
+            case OpenBlock ob -> throw new UnsupportedOperationException("Open blocks are not supported");
             case MacroBlock macroBlock -> throw new UnsupportedOperationException("Macro blocks are not supported");
         }
     }
@@ -209,7 +209,7 @@ public final class AsciiDocToDocx
                 }
                 return;
             }
-            case Tab _ -> {
+            case Tab t -> {
                 R r = factory.createR();
                 R.Tab tab = factory.createRTab();
                 r.getContent()
