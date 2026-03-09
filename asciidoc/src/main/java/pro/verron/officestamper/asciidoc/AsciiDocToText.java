@@ -21,7 +21,7 @@ public final class AsciiDocToText
                 case Italic(List<Inline> children) -> "_%s_".formatted(renderInlines(children));
                 case Sup(List<Inline> children) -> "^%s^".formatted(renderInlines(children));
                 case Sub(List<Inline> children) -> "~%s~".formatted(renderInlines(children));
-                case Tab _ -> sb.append("\t");
+                case Tab t -> sb.append("\t");
                 case Link(String url, String text) -> "%s[%s]".formatted(url, text);
                 case InlineImage(String path, Map<String, String> map) -> "image:%s[%s]".formatted(path,
                         map.entrySet()
@@ -53,7 +53,7 @@ public final class AsciiDocToText
 
     private static String renderBlock(Block block, int tableLevel) {
         return switch (block) {
-            case Heading(_, int level, List<Inline> inlines) -> renderHeading(level, inlines);
+            case Heading(List<String> header, int level, List<Inline> inlines) -> renderHeading(level, inlines);
             case Paragraph(List<String> header, List<Inline> inlines) -> renderHeader(header) + renderInlines(inlines);
             case UnorderedList(List<ListItem> items1) -> renderList(items1, "* ");
             case OrderedList(List<ListItem> items) -> renderList(items, ". ");
@@ -64,7 +64,7 @@ public final class AsciiDocToText
             case OpenBlock openBlock -> render(openBlock);
             case MacroBlock(String name, String id, List<String> list) ->
                     "%s::%s[%s]".formatted(name, id, String.join(", ", list));
-            case Break _ -> "<<<";
+            case Break b -> "<<<";
             case CommentLine(String comment) -> ("// %s").formatted(comment);
         } + "\n\n";
     }

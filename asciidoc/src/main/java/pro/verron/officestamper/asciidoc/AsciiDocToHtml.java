@@ -12,7 +12,7 @@ public final class AsciiDocToHtml
 
     private static String renderBlock(Block block) {
         switch (block) {
-            case Heading(_, int level, List<Inline> inlines) -> {
+            case Heading(List<String> header, int level, List<Inline> inlines) -> {
                 return String.format("<h%d>%s</h%d>\n", level, renderInlines(inlines), level);
             }
             case Paragraph(List<String> header, List<Inline> inlines) -> {
@@ -71,7 +71,7 @@ public final class AsciiDocToHtml
                 case Italic(List<Inline> children) -> sb.append("<i>")
                                                         .append(renderInlines(children))
                                                         .append("</i>");
-                case Tab _ -> sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+                case Tab t -> sb.append("&nbsp;&nbsp;&nbsp;&nbsp;");
                 case Link(String url1, String text) -> sb.append(String.format("<a href=\"%s\">%s</a>", url1, text));
                 case InlineImage(String url, Map<String, String> map) ->
                         sb.append(String.format("<img src=\"%s\" alt=\"%s\">", url, map.get("title")));
