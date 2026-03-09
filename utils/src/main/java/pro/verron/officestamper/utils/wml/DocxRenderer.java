@@ -260,8 +260,8 @@ public class DocxRenderer {
         var type = br.getType();
         if (type == STBrType.PAGE) return "\n[page-break]\n<<<\n";
         else if (type == STBrType.COLUMN) return "\n[col-break]\n<<<\n";
-        else if (type == STBrType.TEXT_WRAPPING) return "<br/>\n";
-        else if (type == null) return "<br/>\n";
+        else if (type == STBrType.TEXT_WRAPPING) return "\n";
+        else if (type == null) return "\n";
         else throw new UtilsException("Unexpected type: " + type);
     }
 
@@ -332,7 +332,7 @@ public class DocxRenderer {
             case CTBlipFillProperties bfp -> stringify(bfp, part);
             case CTBlip blip -> stringify(blip, part);
             case Br br -> stringify(br);
-            case R.Tab r -> "\t";
+            case R.Tab rt -> "\t";
             case R.Cr cr -> "<carriage return>\n";
             case R.CommentReference cr -> stringify(cr);
             case CommentRangeStart crs -> stringify(crs);
@@ -612,7 +612,7 @@ public class DocxRenderer {
                 value));
         stringify(sectPr.getPgSz()).ifPresent(value -> map.put("pgSz", value));
         stringify(sectPr.getPgMar()).ifPresent(value -> map.put("pgMar", value));
-        ofNullable(sectPr.getPaperSrc()).ifPresent(v -> map.put("paperSrc", "xxx"));
+        ofNullable(sectPr.getPaperSrc()).ifPresent(_v -> map.put("paperSrc", "xxx"));
         ofNullable(sectPr.getBidi()).ifPresent(v -> map.put("bidi", "xxx"));
         ofNullable(sectPr.getRtlGutter()).ifPresent(v -> map.put("rtlGutter", "xxx"));
         stringify(sectPr.getDocGrid()).ifPresent(value -> map.put("docGrid", value));

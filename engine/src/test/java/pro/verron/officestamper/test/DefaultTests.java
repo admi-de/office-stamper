@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.expression.spel.SpelParserConfiguration;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import pro.verron.officestamper.api.OfficeStamperConfiguration;
 import pro.verron.officestamper.preset.ExceptionResolvers;
@@ -19,6 +18,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.ArgumentSet;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.preset.EvaluationContextFactories.noopFactory;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.full;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standard;
@@ -27,7 +27,6 @@ import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFacto
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getImage;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 @DisplayName("Core Features") class DefaultTests {
 
@@ -73,6 +72,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         
                          <-- this should be empty.
                         
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
+                        
                         """);
     }
 
@@ -84,17 +85,17 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == ReplaceWith Integration
                         
-                        
                         This variable name should be resolved to the value Simpsons.
                         
                         |===
                         |This variable name should be resolved to the value Simpsons.
-                        
-                        
                         |===
                         
                         
                         
+                        
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                         
                         """);
     }
@@ -107,6 +108,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         I am ${name}.
                         
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=708}
+                        
                         """);
     }
 
@@ -118,6 +121,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 getWordResource(Path.of("ReplaceNullExpressionTest.docx")),
                 """
                         I am .
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=708}
                         
                         """);
     }
@@ -145,6 +150,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 
                 The variable foo has the value bar.
                 
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
+                
                 """);
     }
 
@@ -158,10 +165,12 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         In this paragraph, the variable name should be resolved to the value ${name}.
                         In this paragraph, the variable foo should not be resolved: ${foo}."""),
                 """
-                        Expression Replacement in global paragraphs
-                        This paragraph is untouched.
-                        In this paragraph, the variable name should be resolved to the value Homer Simpson.
+                        Expression Replacement in global paragraphs +
+                        This paragraph is untouched. +
+                        In this paragraph, the variable name should be resolved to the value Homer Simpson. +
                         In this paragraph, the variable foo should not be resolved: ${foo}.
+                        
+                        // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
                         
                         """);
     }
@@ -174,29 +183,24 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == Expression Replacement in Tables
                         
-                        
                         |===
                         |This should resolve to a name:
                         |Bart Simpson
-                        
                         |This should not resolve:
                         |${foo}
+                        a|Nested Table:
                         
-                        |Nested Table:
-                        
-                        |===
-                        |This should resolve to a name:
-                        |Bart Simpson
-                        
-                        |This should not resolve:
-                        |${foo}
-                        
-                        
+                        !===
+                        !This should resolve to a name:
+                        !Bart Simpson
+                        !This should not resolve:
+                        !${foo}
+                        !===
                         |===
                         
                         
-                        |===
                         
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                         
                         """);
     }
@@ -209,38 +213,39 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == Expression Replacement with text format
                         
-                        
                         The text format should be kept intact when an expression is replaced.
                         
-                        It should be bold: ❬Homer Simpson❘{b=true}❭.
+                        It should be bold: *Homer Simpson*.
                         
-                        It should be italic: ❬Homer Simpson❘{i=true}❭.
+                        It should be italic: _Homer Simpson_.
                         
-                        It should be superscript: ❬Homer Simpson❘{vertAlign=superscript}❭.
+                        It should be superscript: ^Homer Simpson^.
                         
-                        It should be subscript: ❬Homer Simpson❘{vertAlign=subscript}❭.
+                        It should be subscript: ~Homer Simpson~.
                         
-                        It should be striked: ❬Homer Simpson❘{strike=true}❭.
+                        It should be striked: [strike]#Homer Simpson#.
                         
-                        It should be underlined: ❬Homer Simpson❘{u=single}❭.
+                        It should be underlined: [u_single]#Homer Simpson#.
                         
-                        It should be doubly underlined: ❬Homer Simpson❘{u=double}❭.
+                        It should be doubly underlined: [u_double]#Homer Simpson#.
                         
-                        It should be thickly underlined: ❬Homer Simpson❘{u=thick}❭.
+                        It should be thickly underlined: [u_thick]#Homer Simpson#.
                         
-                        It should be dot underlined: ❬Homer Simpson❘{u=dotted}❭.
+                        It should be dot underlined: [u_dotted]#Homer Simpson#.
                         
-                        It should be dash underlined: ❬Homer Simpson❘{u=dash}❭.
+                        It should be dash underlined: [u_dash]#Homer Simpson#.
                         
-                        It should be dot and dash underlined: ❬Homer Simpson❘{u=dotDash}❭.
+                        It should be dot and dash underlined: [u_dotDash]#Homer Simpson#.
                         
-                        It should be dot, dot and dash underlined: ❬Homer Simpson❘{u=dotDotDash}❭.
+                        It should be dot, dot and dash underlined: [u_dotDotDash]#Homer Simpson#.
                         
-                        It should be highlighted yellow: ❬Homer Simpson❘{highlight=yellow}❭.
+                        It should be highlighted yellow: [highlight_yellow]#Homer Simpson#.
                         
-                        It should be white over darkblue: ❬Homer Simpson❘{color=FFFFFF,highlight=darkBlue}❭.
+                        It should be white over darkblue: [color_FFFFFF]#[highlight_darkBlue]#Homer Simpson##.
                         
-                        It should be with header formatting: ❬Homer Simpson❘{rStyle=TitreCar}❭.
+                        It should be with header formatting: [rStyle_TitreCar]#Homer Simpson#.
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                         
                         """);
     }
@@ -252,7 +257,6 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 getWordResource(Path.of("ExpressionWithSurroundingSpacesTest.docx")),
                 """
                         == Expression Replacement when expression has leading and/or trailing spaces
-                        
                         
                         When an expression within a paragraph is resolved, the spaces between the replacement and the surrounding text should be as expected. The following paragraphs should all look the same.
                         
@@ -270,6 +274,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         
                         Before Expression After.
                         
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
+                        
                         """);
     }
 
@@ -281,12 +287,13 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == Expression Replacement with comments
                         
-                        
                         This paragraph is untouched.
                         
                         In this paragraph, the variable name should be resolved to the value Homer Simpson.
                         
                         In this paragraph, the variable foo should not be resolved: unresolvedValueWithComment.
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                         
                         """);
     }
@@ -299,12 +306,13 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == Image Replacement in global paragraphs
                         
-                        
                         This paragraph is untouched.
                         
-                        In this paragraph, an image of Mona Lisa is inserted: /word/media/document_image_rId6.jpeg:rId6:image/jpeg:8.8 kB:sha1=XMpVtDbetKjZTkPhy598GdJQM/4=:cy=$d:1276350.
+                        In this paragraph, an image of Mona Lisa is inserted: image:rId6[cx=1276350, cy=962025].
                         
-                        This paragraph has the image /word/media/document_image_rId7.jpeg:rId7:image/jpeg:8.8 kB:sha1=XMpVtDbetKjZTkPhy598GdJQM/4=:cy=$d:1276350 in the middle.
+                        This paragraph has the image image:rId7[cx=1276350, cy=962025] in the middle.
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                         
                         """);
     }
@@ -317,12 +325,13 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == Image Replacement in global paragraphs
                         
-                        
                         This paragraph is untouched.
                         
-                        In this paragraph, an image of Mona Lisa is inserted: /word/media/document_image_rId6.jpeg:rId6:image/jpeg:8.8 kB:sha1=XMpVtDbetKjZTkPhy598GdJQM/4=:cy=$d:635000.
+                        In this paragraph, an image of Mona Lisa is inserted: image:rId6[cx=635000, cy=478619].
                         
-                        This paragraph has the image /word/media/document_image_rId7.jpeg:rId7:image/jpeg:8.8 kB:sha1=XMpVtDbetKjZTkPhy598GdJQM/4=:cy=$d:635000 in the middle.
+                        This paragraph has the image image:rId7[cx=635000, cy=478619] in the middle.
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                         
                         """);
     }
@@ -334,6 +343,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 getWordResource(Path.of("LeaveEmptyOnExpressionErrorTest.docx")),
                 """
                         Leave me empty .
+                        
+                        // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=708}
                         
                         """);
     }
@@ -347,10 +358,12 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         This paragraph should have a split input: ${sentence}.
                         """),
                 """
-                        This paragraph should not be # split.
-                        This paragraph should have a split input: whatever <br/>
-                         split in <br/>
+                        This paragraph should not be # split. +
+                        This paragraph should have a split input: whatever  +
+                         split in  +
                          three lines.
+                        
+                        // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
                         
                         """);
     }
@@ -370,13 +383,10 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         
                         |===
                         |Values
-                        
-                        |first value
-                        
-                        |second value
-                        
-                        
+                        a|first value
+                        a|second value
                         |===
+                        
                         
                         
                         
@@ -394,6 +404,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         Paragraph end
                         
                         
+                        
+                        // section {docGrid={linePitch=360}, pgMar={bottom=1417, footer=708, header=708, left=1417, right=1417, top=1417}, pgSz={h=16838, w=11906}, space=708}
                         
                         """);
     }
@@ -428,6 +440,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         
                         
                         
+                        // section {pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
+                        
                         """);
     }
 
@@ -439,15 +453,34 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 """
                         == Expression Replacement in Form Controls
                         
+                        [form, id=8a282f9]
+                        --
+                        Rich text control line Homer
                         
-                        [Rich text control line Homer]
-                        Rich text control inlined [Homer]
+                        --
                         
-                        [Raw text control line Homer]
-                        Raw text control inlined [Homer]
                         
-                        [Homer]
+                        Rich text control inlined form:df261932[Homer]
                         
+                        [form, id=fe2b2bd9]
+                        --
+                        Raw text control line Homer
+                        
+                        --
+                        
+                        
+                        Raw text control inlined form:50007206[Homer]
+                        
+                        [form, id=a90c90aa]
+                        --
+                        Homer
+                        
+                        --
+                        
+                        
+                        
+                        
+                        // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=16838, w=11906}, space=708}
                         
                         """);
     }
@@ -455,9 +488,9 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
     private static ArgumentSet nullPointerResolutionTest_testWithCustomSpel(ContextFactory factory) {
         // Beware, this configuration only autogrows pojos and java beans,
         // so it will not work if your type has no default constructor and no setters.
-        var expressionParser = new SpelExpressionParser(new SpelParserConfiguration(true, true));
+        var parserConfiguration = new SpelParserConfiguration(true, true);
         return argumentSet("Null Pointer Resolution with Custom SpEL Configuration",
-                standard().setExpressionParser(expressionParser)
+                standard().setParserConfiguration(parserConfiguration)
                           .setEvaluationContextFactory(noopFactory())
                           .addResolver(Resolvers.nullToDefault("Nullish value!!")),
                 factory.nullishContext(),
@@ -487,6 +520,8 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                         
                         
                         
+                        // section {pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
+                        
                         """);
     }
 
@@ -501,7 +536,7 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
     ) {
         var stamper = docxPackageStamper(config);
         var wordprocessingMLPackage = stamper.stamp(template, context);
-        var actual = docxToString(wordprocessingMLPackage);
-        assertEquals(expected, actual);
+        var actual = toAsciidoc(wordprocessingMLPackage);
+        assertEquals(expected.replace("\r\n", "\n"), actual.replace("\r\n", "\n"));
     }
 }

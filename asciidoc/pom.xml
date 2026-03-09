@@ -7,11 +7,11 @@
     <parent>
         <groupId>de.admi.office-stamper</groupId>
         <artifactId>office-stamper</artifactId>
-        <version>103.1.0</version>
+        <version>103.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <name>Office-stamper AsciiDoc</name>
+    <name>Office-stamper AsciiDoc Parser</name>
     <artifactId>asciidoc</artifactId>
     <packaging>jar</packaging>
 
@@ -27,9 +27,10 @@
             <artifactId>javafx-controls</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.asciidoctor</groupId>
-            <artifactId>asciidoctorj</artifactId>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
@@ -40,10 +41,6 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
         </dependency>
     </dependencies>
 

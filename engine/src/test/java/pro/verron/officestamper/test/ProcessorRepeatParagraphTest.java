@@ -20,13 +20,13 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standard;
 import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
 import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
 import static pro.verron.officestamper.test.utils.DocxFactory.makeWordResource;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 class ProcessorRepeatParagraphTest {
     public static final ObjectContextFactory FACTORY = new ObjectContextFactory();
@@ -61,7 +61,6 @@ class ProcessorRepeatParagraphTest {
         var expected = """
                 == Characters 1 line
                 
-                
                 Homer Simpson: Dan Castellaneta
                 
                 Marge Simpson: Julie Kavner
@@ -78,38 +77,33 @@ class ProcessorRepeatParagraphTest {
                 
                 == Characters multi-line
                 
-                
                 === Homer Simpson
-                
                 
                 Actor: Dan Castellaneta
                 
                 === Marge Simpson
                 
-                
                 Actor: Julie Kavner
                 
                 === Bart Simpson
-                
                 
                 Actor: Nancy Cartwright
                 
                 === Kent Brockman
                 
-                
                 Actor: Harry Shearer
                 
                 === Disco Stu
-                
                 
                 Actor: Hank Azaria
                 
                 === Krusty the Clown
                 
-                
                 Actor: Dan Castellaneta
                 
                 There are 6 characters.
+                
+                // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                 
                 """;
 
@@ -129,32 +123,32 @@ class ProcessorRepeatParagraphTest {
                         
                         
                         
-                        [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=11906,orient=LANDSCAPE,w=16838}}]
-                        <<<
+                        
+                        // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=11906, orient=landscape, w=16838}, space=708}
                         
                         Second page is portrait, layout change should survive to repeatParagraph processor (Homer).
                         
                         
                         
                         Without a section break changing the layout in between, but a page break instead.
-                        [page-break]
-                        <<<
                         
+                        <<<
                         
                         Second page is portrait, layout change should survive to repeatParagraph processor (Marge).
                         
                         
                         
                         Without a section break changing the layout in between, but a page break instead.
-                        [page-break]
+                        
                         <<<
                         
                         
                         
-                        [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=16838,w=11906}}]
-                        <<<
+                        // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=16838, w=11906}, space=708}
                         
                         Fourth page is set to landscape again.
+                        
+                        // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=11906, orient=landscape, w=16838}, space=708}
                         
                         """);
     }
@@ -170,36 +164,38 @@ class ProcessorRepeatParagraphTest {
                 
                 
                 
-                [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=11906,orient=LANDSCAPE,w=16838}}]
-                <<<
+                
+                // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=11906, orient=landscape, w=16838}, space=708}
                 
                 Second page is portrait, layout change should survive to repeatParagraph processor (Homer).
                 
                 
                 
                 
-                [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=16838,w=11906}}]
-                <<<
+                
+                // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=16838, w=11906}, space=708}
                 
                 With a page break changing the layout in between.
-                [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=11906,orient=LANDSCAPE,w=16838}}]
-                <<<
+                
+                // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=11906, orient=landscape, w=16838}, space=708}
                 
                 Second page is portrait, layout change should survive to repeatParagraph processor (Marge).
                 
                 
                 
                 
-                [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=16838,w=11906}}]
-                <<<
+                
+                // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=16838, w=11906}, space=708}
                 
                 With a page break changing the layout in between.
                 
                 
-                [section-break, {docGrid={linePitch=360},pgMar={bottom=1418,footer=709,gutter=0,header=709,left=1418,right=1418,top=1418},pgSz={h=11906,orient=LANDSCAPE,w=16838}}]
-                <<<
+                
+                // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=11906, orient=landscape, w=16838}, space=708}
                 
                 Fourth page is set to portrait again.
+                
+                // section {docGrid={linePitch=360}, pgMar={bottom=1418, footer=709, header=709, left=1418, right=1418, top=1418}, pgSz={h=16838, w=11906}, space=708}
                 
                 """;
 
@@ -223,7 +219,7 @@ class ProcessorRepeatParagraphTest {
         log.info(name);
         var stamper = docxPackageStamper(config);
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         assertEquals(expected, actual);
     }
 
@@ -237,7 +233,7 @@ class ProcessorRepeatParagraphTest {
                 """);
         var context = FACTORY.names(List.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         var expected = """
                 Homer
                 
@@ -248,6 +244,8 @@ class ProcessorRepeatParagraphTest {
                 Lisa
                 
                 Maggie
+                
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
                 
                 """;
         assertEquals(expected, actual);
@@ -263,7 +261,7 @@ class ProcessorRepeatParagraphTest {
                 """);
         var context = FACTORY.names(Set.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         var expected = """
                 Marge
                 
@@ -274,6 +272,8 @@ class ProcessorRepeatParagraphTest {
                 Bart
                 
                 Lisa
+                
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
                 
                 """;
         assertEquals(expected, actual);
@@ -289,7 +289,7 @@ class ProcessorRepeatParagraphTest {
                 """);
         var context = FACTORY.names(Queue.class, "Homer", "Marge", "Bart", "Lisa", "Maggie");
         var wordprocessingMLPackage = stamper.stamp(template, context);
-        var actual = docxToString(wordprocessingMLPackage);
+        var actual = toAsciidoc(wordprocessingMLPackage);
         var expected = """
                 Homer
                 
@@ -300,6 +300,8 @@ class ProcessorRepeatParagraphTest {
                 Lisa
                 
                 Maggie
+                
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
                 
                 """;
         assertEquals(expected, actual);

@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import static java.util.Locale.forLanguageTag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.minimal;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standard;
 import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
@@ -24,7 +25,6 @@ import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFacto
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
 import static pro.verron.officestamper.test.utils.DocxFactory.makeWordResource;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 @DisplayName("Custom function features") class CustomFunctionTests {
 
@@ -63,11 +63,10 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
         var expected = """
                 == Custom Expression Function
                 
-                
                 In this paragraph, we uppercase a variable: THE SIMPSONS.
                 
-                In this paragraph, we uppercase some multiline text: IT ALSO WORKS WITH<br/>
-                MULTILINE<br/>
+                In this paragraph, we uppercase some multiline text: IT ALSO WORKS WITH +
+                MULTILINE +
                 STRINGS OF TEXT.
                 
                 We toggle this paragraph display with a processor using the custom function.
@@ -83,31 +82,39 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
                 We check custom functions runs in placeholders after processing: MAGGIE SIMPSON.
                 
                 |===
+                [rowStyle=2048]
+                [style=516]
                 |We check custom functions runs in placeholders after processing:
-                
+                [rowStyle=32]
+                [style=512]
                 |HOMER SIMPSON
-                |DAN CASTELLANETA<cnfStyle=000000100000>
-                
+                |DAN CASTELLANETA
+                [rowStyle=32]
+                [style=512]
                 |MARGE SIMPSON
-                |JULIE KAVNER<cnfStyle=000000100000>
-                
+                |JULIE KAVNER
+                [rowStyle=32]
+                [style=512]
                 |BART SIMPSON
-                |NANCY CARTWRIGHT<cnfStyle=000000100000>
-                
+                |NANCY CARTWRIGHT
+                [rowStyle=32]
+                [style=512]
                 |LISA SIMPSON
-                |YEARDLEY SMITH<cnfStyle=000000100000>
-                
+                |YEARDLEY SMITH
+                [rowStyle=32]
+                [style=512]
                 |MAGGIE SIMPSON
-                |JULIE KAVNER<cnfStyle=000000100000>
-                
-                
+                |JULIE KAVNER
                 |===
                 
                 
+                
+                // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
+                
                 """;
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
-        assertEquals(expected, actual);
+        var actual = toAsciidoc(stamped);
+        assertEquals(expected.replace("\r\n", "\n"), actual.replace("\r\n", "\n"));
     }
 
     @MethodSource("factories")
@@ -122,9 +129,11 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
         var expected = """
                 THE SIMPSONS
                 
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
+                
                 """;
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         assertEquals(expected, actual);
     }
 
@@ -140,9 +149,11 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
         var expected = """
                 [a, b, c]
                 
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
+                
                 """;
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         assertEquals(expected, actual);
     }
 
@@ -156,9 +167,14 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
         var template = makeWordResource("${Add('3.22', 4)}");
         var context = factory.empty();
         var stamper = docxPackageStamper(config);
-        var expected = "7.22\n\n";
+        var expected = """
+                7.22
+                
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
+                
+                """;
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         assertEquals(expected, actual);
     }
 
@@ -176,8 +192,12 @@ import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
         var context = factory.date(LocalDate.of(2024, Month.APRIL, 1));
         var stamper = docxPackageStamper(config);
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
-        assertEquals(expected + "\n", actual);
+        var actual = toAsciidoc(stamped);
+        assertEquals("""
+                %s
+                // section {pgMar={bottom=1440, left=1440, right=1440, top=1440}, pgSz={code=9, h=16839, w=11907}}
+                
+                """.formatted(expected), actual);
     }
 
     /// The UppercaseFunction interface defines a method for converting a string to uppercase.

@@ -12,11 +12,11 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.preset.ExceptionResolvers.passing;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.standard;
 import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 
 /// @author Joseph Verron
@@ -36,14 +36,15 @@ class TextBoxesTest {
         var config = standard().setExceptionResolver(passing());
         var stamper = OfficeStampers.docxPackageStamper(config);
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         String expected = """
                 == Expression Replacement in TextBoxes
-                
                 
                 Bart SimpsonThis should resolve to a name:\s
                 
                 ${foo}This should not resolve:\s
+                
+                // section {docGrid={linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                 
                 """;
         assertEquals(expected, actual);

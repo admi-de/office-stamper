@@ -13,10 +13,10 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 
 /// Verifies stampTable feature works correctly
@@ -43,39 +43,55 @@ class StampTableTest {
                         List.of("Disco Stu", "Hank Azaria"),
                         List.of("Krusty the Clown", "Dan Castellaneta")));
         var wordprocessingMLPackage = stamper.stamp(template, context);
-        var string = docxToString(wordprocessingMLPackage);
+        var string = toAsciidoc(wordprocessingMLPackage);
         assertEquals("""
                 Stamping Table
                 
                 List of Simpsons characters
                 
                 |===
+                [rowStyle=2048]
+                [style=512]
                 |Character
+                [style=512]
                 |Actor
-                
+                [rowStyle=32]
+                [style=512]
                 |Homer Simpson
+                [style=512]
                 |Dan Castellaneta
-                
+                [rowStyle=32]
+                [style=512]
                 |Marge Simpson
+                [style=512]
                 |Julie Kavner
-                
+                [rowStyle=32]
+                [style=512]
                 |Bart Simpson
+                [style=512]
                 |Nancy Cartwright
-                
+                [rowStyle=32]
+                [style=512]
                 |Kent Brockman
+                [style=512]
                 |Harry Shearer
-                
+                [rowStyle=32]
+                [style=512]
                 |Disco Stu
+                [style=512]
                 |Hank Azaria
-                
+                [rowStyle=32]
+                [style=512]
                 |Krusty the Clown
+                [style=512]
                 |Dan Castellaneta
-                
-                
                 |===
                 
                 
+                
                 There are 6 characters in the above table.
+                
+                // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                 
                 """, string);
     }

@@ -13,12 +13,12 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.preset.OfficeStamperConfigurations.minimal;
 import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
 import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 import static pro.verron.officestamper.utils.wml.WmlFactory.newRun;
 
 @DisplayName("Custom processors features") class CustomProcessorTests {
@@ -39,18 +39,19 @@ import static pro.verron.officestamper.utils.wml.WmlFactory.newRun;
         var expected = """
                 == Custom Comment Processor Test
                 
-                
                 Visited
                 
                 This paragraph is untouched.
                 
                 Visited
                 
+                // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
+                
                 """;
         var stamper = docxPackageStamper(config);
         var stamped = stamper.stamp(template, factory.empty());
-        var actual = docxToString(stamped);
-        assertEquals(expected, actual);
+        var actual = toAsciidoc(stamped);
+        assertEquals(expected.replace("\r\n", "\n"), actual.replace("\r\n", "\n"));
     }
 
     /// A custom processor interface that defines methods to handle specific actions during document processing.

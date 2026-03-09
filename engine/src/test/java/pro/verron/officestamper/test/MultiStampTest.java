@@ -11,11 +11,11 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static pro.verron.officestamper.asciidoc.AsciiDocCompiler.toAsciidoc;
 import static pro.verron.officestamper.preset.OfficeStampers.docxPackageStamper;
 import static pro.verron.officestamper.test.utils.ContextFactory.mapContextFactory;
 import static pro.verron.officestamper.test.utils.ContextFactory.objectContextFactory;
 import static pro.verron.officestamper.test.utils.ResourceUtils.getWordResource;
-import static pro.verron.officestamper.utils.wml.DocxRenderer.docxToString;
 
 /// @author Joseph Verron
 /// @author Tom Hombergs
@@ -36,53 +36,55 @@ class MultiStampTest {
         var filename = "MultiStampTest.docx";
         var template = getWordResource(filename);
         var stamped = stamper.stamp(template, context);
-        var actual = docxToString(stamped);
+        var actual = toAsciidoc(stamped);
         assertEquals("""
                 == Multi-Stamp-Test
                 
-                
                 |===
+                [rowStyle=2048]
                 |The next row will repeat multiple times with a different name:
-                
+                [rowStyle=32]
                 |Homer
-                
+                [rowStyle=32]
                 |Marge
-                
+                [rowStyle=32]
                 |Bart
-                
+                [rowStyle=32]
                 |Lisa
-                
+                [rowStyle=32]
                 |Maggie
-                
-                
                 |===
                 
+                
+                
+                // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                 
                 """, actual);
 
         var template2 = getWordResource(filename);
         var wordprocessingMLPackage = stamper.stamp(template2, context);
-        var document2 = docxToString(wordprocessingMLPackage);
+        var document2 = toAsciidoc(wordprocessingMLPackage);
         assertEquals("""
                 == Multi-Stamp-Test
                 
-                
                 |===
+                [rowStyle=2048]
                 |The next row will repeat multiple times with a different name:
-                
+                [rowStyle=32]
                 |Homer
-                
+                [rowStyle=32]
                 |Marge
-                
+                [rowStyle=32]
                 |Bart
-                
+                [rowStyle=32]
                 |Lisa
-                
+                [rowStyle=32]
                 |Maggie
-                
-                
                 |===
                 
+                
+                
+                // section {docGrid={charSpace=-6145, linePitch=240}, pgMar={bottom=1134, left=1134, right=1134, top=1134}, pgSz={h=16838, w=11906}, space=720}
                 
                 """, document2);
     }

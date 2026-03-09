@@ -90,16 +90,6 @@ public class UnionEvaluationContext
         return evaluationContext.lookupVariable(name);
     }
 
-    /// Returns the wrapped evaluation context.
-    ///
-    /// @return the evaluation context
-    public EvaluationContext evaluationContext() {return evaluationContext;}
-
-    /// Returns the invokers.
-    ///
-    /// @return the invokers
-    public Invokers invokers() {return invokers;}
-
     @Override
     public int hashCode() {
         return Objects.hash(evaluationContext, invokers);
@@ -116,9 +106,6 @@ public class UnionEvaluationContext
 
     @Override
     public String toString() {
-        return "UnionEvaluationContext[" + "evaluationContext=" + evaluationContext + ", " + "invokers=" + invokers
-               + ']';
+        return "UnionEvaluationContext[evaluationContext=%s, invokers=%s]".formatted(evaluationContext, invokers);
     }
-
-
 }
